@@ -1,0 +1,254 @@
+{
+  "_id": "626152bf0e8346dfd9252e44",
+  "name": "AKRON FULTON INTL",
+  "icaoCode": "KAKR",
+  "type": 3,
+  "trafficType": [
+    0
+  ],
+  "magneticDeclination": -7,
+  "country": "US",
+  "geometry": {
+    "type": "Point",
+    "coordinates": [
+      -81.46768472,
+      41.03742361
+    ]
+  },
+  "elevation": {
+    "value": 325,
+    "unit": 0,
+    "referenceDatum": 1
+  },
+  "ppr": false,
+  "private": false,
+  "skydiveActivity": false,
+  "winchOnly": false,
+  "frequencies": [
+    {
+      "value": "123.075",
+      "unit": 2,
+      "type": 4,
+      "primary": false,
+      "publicUse": true,
+      "remarks": "ACTVT REIL RWY 07 & 25; PAPI RWY 07 & 25; MIRL RWY 07/25 - CTAF.",
+      "_id": "6af8e064b59b2ad7746e2b2e"
+    },
+    {
+      "value": "123.075",
+      "unit": 2,
+      "type": 12,
+      "primary": true,
+      "publicUse": true,
+      "_id": "6af8e064b59b2ad7746e2b2f"
+    },
+    {
+      "value": "126.825",
+      "unit": 2,
+      "type": 23,
+      "primary": false,
+      "publicUse": true,
+      "_id": "6af8e064b59b2ad7746e2b30"
+    },
+    {
+      "value": "121.600",
+      "unit": 2,
+      "type": 26,
+      "name": "CLEARANCE DELIVERY (CD/P)",
+      "primary": false,
+      "publicUse": true,
+      "_id": "6af8e064b59b2ad7746e2b31"
+    },
+    {
+      "value": "125.500",
+      "unit": 2,
+      "type": 0,
+      "name": "CLEVELAND APPROACH (APCH/P DEP/P)",
+      "primary": false,
+      "publicUse": true,
+      "_id": "6af8e064b59b2ad7746e2b32"
+    },
+    {
+      "value": "125.500",
+      "unit": 2,
+      "type": 6,
+      "name": "CLEVELAND APPROACH (APCH/P DEP/P)",
+      "primary": false,
+      "publicUse": true,
+      "_id": "6af8e064b59b2ad7746e2b33"
+    }
+  ],
+  "runways": [
+    {
+      "designator": "07",
+      "trueHeading": 62,
+      "alignedTrueNorth": false,
+      "operations": 0,
+      "mainRunway": true,
+      "turnDirection": 1,
+      "takeOffOnly": false,
+      "landingOnly": false,
+      "surface": {
+        "composition": [
+          0
+        ],
+        "mainComposite": 0,
+        "condition": 0,
+        "mtow": {
+          "value": 160,
+          "unit": 9
+        }
+      },
+      "dimension": {
+        "length": {
+          "value": 1931,
+          "unit": 0
+        },
+        "width": {
+          "value": 46,
+          "unit": 0
+        }
+      },
+      "declaredDistance": {
+        "tora": {
+          "value": 1931,
+          "unit": 0
+        },
+        "lda": {
+          "value": 1931,
+          "unit": 0
+        }
+      },
+      "thresholdLocation": {
+        "geometry": {
+          "type": "Point",
+          "coordinates": [
+            -81.47538713,
+            41.03431727
+          ]
+        },
+        "elevation": {
+          "value": 1055,
+          "unit": 0,
+          "referenceDatum": 1
+        }
+      },
+      "pilotCtrlLighting": true,
+      "lightingSystem": [
+        2,
+        0
+      ],
+      "visualApproachAids": [
+        1
+      ],
+      "_id": "6af8e064b59b2ad7746e2b34"
+    },
+    {
+      "designator": "25",
+      "trueHeading": 242,
+      "alignedTrueNorth": false,
+      "operations": 0,
+      "mainRunway": false,
+      "turnDirection": 1,
+      "takeOffOnly": false,
+      "landingOnly": false,
+      "surface": {
+        "composition": [
+          0
+        ],
+        "mainComposite": 0,
+        "condition": 0,
+        "mtow": {
+          "value": 160,
+          "unit": 9
+        }
+      },
+      "dimension": {
+        "length": {
+          "value": 1931,
+          "unit": 0
+        },
+        "width": {
+          "value": 46,
+          "unit": 0
+        }
+      },
+      "declaredDistance": {
+        "tora": {
+          "value": 1931,
+          "unit": 0
+        },
+        "lda": {
+          "value": 1931,
+          "unit": 0
+        }
+      },
+      "thresholdLocation": {
+        "geometry": {
+          "type": "Point",
+          "coordinates": [
+            -81.45838716,
+            41.0411718
+          ]
+        },
+        "elevation": {
+          "value": 1058,
+          "unit": 0,
+          "referenceDatum": 1
+        }
+      },
+      "pilotCtrlLighting": true,
+      "lightingSystem": [
+        2,
+        0
+      ],
+      "instrumentApproachAids": [
+        {
+          "identifier": "AKR",
+          "frequency": {
+            "value": "110.900",
+            "unit": 2
+          },
+          "channel": "46X",
+          "alignedTrueNorth": false,
+          "type": 1,
+          "remarks": "LOC: OPERATIONAL IFR; DME: OPERATIONAL RESTRICTED"
+        }
+      ],
+      "visualApproachAids": [
+        1
+      ],
+      "_id": "6af8e064b59b2ad7746e2b35"
+    }
+  ],
+  "createdAt": "2022-04-21T12:49:03.180Z",
+  "updatedAt": "2026-11-14T22:28:02.753Z",
+  "createdBy": "AUTO-IMPORTER",
+  "updatedBy": "openaip-system",
+  "elevationGeoid": {
+    "geoidHeight": -34,
+    "hae": 291
+  },
+  "__v": 29,
+  "iataCode": "AKC",
+  "altIdentifier": "AKR",
+  "contact": "MANAGER\nANTHONY PLUCINSKI\n1600 TRIPLETT BLVD\nAKRON, OH 44306\nPhone: 330-733-4760\n\nOWNER\nCITY OF AKRON\n166 S HIGH ST RM 701\nAKRON, OH 44308\nPhone: 330-375-2699",
+  "hoursOfOperation": {
+    "remarks": "month|day|hour\nALL|MON-FRI|0600-2200\nALL|SAT-SUN|0800-2000"
+  },
+  "services": {
+    "fuelTypes": [
+      0,
+      2
+    ],
+    "handlingFacilities": [
+      2
+    ]
+  },
+  "telephoneServices": [
+    {
+      "name": "CLEVELAND (toll-free)",
+      "phoneNumber": "1-800-WX-BRIEF"
+    }
+  ]
+}

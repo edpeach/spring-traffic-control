@@ -1,0 +1,50 @@
+<!-- Desktop Navigation -->
+<nav aria-label="Primary" class="hidden md:flex md:items-center md:gap-1">
+  @for (item of navItems; track item.path) {
+    <a
+      [routerLink]="item.path"
+      routerLinkActive="bg-surface-elevated text-accent-bright border-edge"
+      ariaCurrentWhenActive="page"
+      class="flex items-center gap-1.5 rounded-lg border border-transparent px-3 py-1.5 text-sm font-medium text-ink-muted transition-colors hover:bg-surface-elevated hover:text-ink focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"
+    >
+      <span class="material-symbols-outlined text-lg" aria-hidden="true">{{ item.icon }}</span>
+      <span>{{ item.label }}</span>
+    </a>
+  }
+</nav>
+
+<!-- Mobile Navigation Dropdown -->
+<nav aria-label="Primary" class="md:hidden">
+  <button
+    type="button"
+    popovertarget="mobile-nav-menu"
+    popovertargetaction="toggle"
+    aria-controls="mobile-nav-menu"
+    class="nav-trigger flex items-center gap-1.5 rounded-lg border border-edge bg-surface-elevated px-2.5 py-1.5 text-sm font-medium text-ink focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"
+  >
+    <span class="material-symbols-outlined text-lg" aria-hidden="true">menu</span>
+    <span>Menu</span>
+  </button>
+
+  <ul
+    #mobileNav
+    id="mobile-nav-menu"
+    popover="auto"
+    class="nav-popover rounded-xl border border-edge bg-surface p-2 shadow-xl"
+  >
+    @for (item of navItems; track item.path) {
+      <li>
+        <a
+          [routerLink]="item.path"
+          routerLinkActive="bg-surface-elevated text-accent-bright"
+          ariaCurrentWhenActive="page"
+          (click)="closePopover(mobileNav)"
+          class="flex items-center gap-2 rounded-lg px-3 py-2 text-sm font-medium text-ink-muted transition-colors hover:bg-surface-elevated hover:text-ink"
+        >
+          <span class="material-symbols-outlined text-lg" aria-hidden="true">{{ item.icon }}</span>
+          <span>{{ item.label }}</span>
+        </a>
+      </li>
+    }
+  </ul>
+</nav>

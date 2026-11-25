@@ -1,0 +1,110 @@
+@let f = flight();
+
+<mat-card appearance="outlined" class="flight-card flex h-full flex-col">
+  <mat-card-header class="flex items-start justify-between gap-3">
+    <mat-card-title class="text-left">
+      <span class="font-mono">{{ f.flightName }}</span>
+      <span class="ml-2 font-normal text-ink-muted">{{ routeLabel() }}</span>
+    </mat-card-title>
+
+    <mat-card-subtitle class="pt-1.5 text-left">
+      <mat-chip-set class="flight-subtitle-chips" aria-label="Flight identifiers and status">
+        <mat-chip class="flight-dir-chip">
+          {{ isArrival() ? 'Arrival' : 'Departure' }}
+        </mat-chip>
+        @if (isCodeshare()) {
+          <mat-chip [matTooltip]="'Operated as ' + f.mainFlight">{{ f.mainFlight }}</mat-chip>
+        }
+        @for (state of f.flightStates; track state) {
+          <mat-chip>{{ state }}</mat-chip>
+        }
+      </mat-chip-set>
+    </mat-card-subtitle>
+
+    <div class="ml-auto flex shrink-0 items-center gap-1 self-start">
+      <span
+        class="font-mono text-sm font-semibold text-accent-bright"
+        [matTooltip]="isArrival() ? 'Scheduled arrival time' : 'Scheduled departure time'"
+      >
+        {{ scheduledTimeLabel() }}
+      </span>
+      <button
+        mat-icon-button
+        type="button"
+        [attr.aria-expanded]="expanded()"
+        [attr.aria-label]="expanded() ? 'Hide flight details' : 'Show more flight details'"
+        [matTooltip]="expanded() ? 'Hide details' : 'More details'"
+        (click)="toggleExpanded()"
+      >
+        <mat-icon>{{ expanded() ? 'expand_less' : 'expand_more' }}</mat-icon>
+      </button>
+    </div>
+  </mat-card-header>
+
+  <mat-card-content class="flex flex-1 flex-col gap-3 px-4 py-3 text-xs">
+    <div class="flex flex-wrap items-center justify-between gap-x-4 gap-y-2 py-1">
+      <span class="inline-flex items-center gap-1.5 font-mono text-ink">
+        <mat-icon class="flight-meta-icon text-accent" aria-hidden="true">
+          {{ isArrival() ? 'flight_land' : 'flight_takeoff' }}
+        </mat-icon>
+        <span>{{ isArrival() ? 'ETA' : 'ETD' }} {{ liveTimeLabel() }}</span>
+      </span>
+
+      <span class="inline-flex items-center gap-1.5 text-ink-muted">
+        <mat-icon class="flight-meta-icon text-accent" aria-hidden="true">door_front</mat-icon>
+        <span>
+          Gate {{ f.gate ?? '—' }}
+          @if (f.terminal) {
+            <span>• T{{ f.terminal }}</span>
+          }
+        </span>
+      </span>
+
+      <span class="inline-flex items-center gap-1.5 font-mono text-ink">
+        <mat-icon class="flight-meta-icon text-accent" aria-hidden="true">airlines</mat-icon>
+        <span>{{ f.aircraftRegistration ?? aircraftTypeLabel() }}</span>
+      </span>
+    </div>
+
+    @if (expanded()) {
+      <mat-divider />
+      <dl class="grid grid-cols-2 gap-x-4 gap-y-2.5 py-1 text-xs">
+        <div>
+          <dt class="text-ink-muted">Aircraft Type</dt>
+          <dd class="font-mono font-medium text-ink">{{ aircraftTypeLabel() }}</dd>
+        </div>
+        <div>
+          <dt class="text-ink-muted">Pier / Terminal</dt>
+          <dd class="font-medium text-ink">{{ f.pier ?? '—' }} / {{ f.terminal ?? '—' }}</dd>
+        </div>
+        @if (f.checkinRows.length) {
+          <div>
+            <dt class="text-ink-muted">Check-in Rows</dt>
+            <dd class="font-mono font-medium text-ink">{{ f.checkinRows.join(', ') }}</dd>
+          </div>
+        }
+        @if (f.baggageBelts.length) {
+          <div>
+            <dt class="text-ink-muted">Baggage Belts</dt>
+            <dd class="font-mono font-medium text-ink">{{ f.baggageBelts.join(', ') }}</dd>
+          </div>
+        }
+        @if (f.codeshares.length) {
+          <div class="col-span-2">
+            <dt class="text-ink-muted">Codeshares</dt>
+            <dd class="mt-0.5 font-mono text-ink">{{ f.codeshares.join(', ') }}</dd>
+          </div>
+        }
+      </dl>
+    }
+  </mat-card-content>
+
+  <mat-divider />
+
+  <mat-card-actions align="end">
+    <button mat-button type="button" (click)="viewDetails.emit(f)">
+      Details
+      <mat-icon iconPositionEnd>arrow_forward</mat-icon>
+    </button>
+  </mat-card-actions>
+</mat-card>

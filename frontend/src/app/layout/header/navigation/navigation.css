@@ -1,0 +1,19 @@
+.nav-trigger {
+  anchor-name: --nav-trigger;
+}
+
+.nav-popover {
+  position: fixed;
+  inset: auto;
+  inset-block-start: 4.5rem;
+  inset-block-start: anchor(--nav-trigger bottom);
+  inset-inline-end: 1rem;
+  inline-size: min(80dvw, 15rem);
+  max-block-size: calc(100dvh - 6rem);
+  margin-block-start: 0.5rem;
+  overflow: auto;
+}
+
+.nav-popover:not(:is(:popover-open, .\:popover-open)) {
+  display: none;
+}

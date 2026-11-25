@@ -1,0 +1,52 @@
+<!-- Agent FAB (bottom-right) -->
+<button
+  type="button"
+  (click)="toggle()"
+  [attr.aria-expanded]="isOpen()"
+  aria-controls="agent-drawer-panel"
+  aria-label="Toggle AI Agent panel"
+  [style.right.px]="24 + fabOffsetRightPx()"
+  class="fixed bottom-6 z-40 flex size-14 items-center justify-center rounded-full bg-accent text-accent-contrast shadow-lg shadow-glow transition-transform hover:scale-105 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent-bright"
+>
+  <span class="material-symbols-outlined text-2xl" aria-hidden="true">
+    {{ isOpen() ? 'close' : 'smart_toy' }}
+  </span>
+</button>
+
+<!-- Sliding Right Panel (non-blocking translucent surface) -->
+<aside
+  id="agent-drawer-panel"
+  aria-label="AI Agent Assistant"
+  [attr.aria-hidden]="!isOpen()"
+  [class.translate-x-0]="isOpen()"
+  [class.translate-x-full]="!isOpen()"
+  [class.pointer-events-none]="!isOpen()"
+  class="fixed inset-y-0 right-0 z-50 flex w-full max-w-md flex-col border-l border-edge bg-surface/80 text-ink shadow-2xl backdrop-blur-md transition-transform duration-300 ease-out"
+>
+  <div class="flex items-center justify-between border-b border-edge px-4 py-3">
+    <div class="flex items-center gap-2">
+      <span class="material-symbols-outlined text-accent-bright" aria-hidden="true">smart_toy</span>
+      <h2 class="text-sm font-semibold">Traffic Control Agent</h2>
+    </div>
+
+    <div class="flex items-center gap-1">
+      <a
+        routerLink="/agent"
+        (click)="close()"
+        class="rounded-lg px-2 py-1 text-xs font-medium text-ink-muted transition-colors hover:bg-surface-elevated hover:text-ink"
+      >
+        Full page
+      </a>
+      <button
+        type="button"
+        (click)="close()"
+        aria-label="Close AI Agent panel"
+        class="flex size-8 items-center justify-center rounded-lg text-ink-muted transition-colors hover:bg-surface-elevated hover:text-ink"
+      >
+        <span class="material-symbols-outlined text-lg" aria-hidden="true">close</span>
+      </button>
+    </div>
+  </div>
+
+  <app-agent-chat-view mode="drawer" />
+</aside>

@@ -1,0 +1,91 @@
+<div
+  class="flex flex-wrap items-center gap-2 rounded-xl border border-edge bg-surface/95 p-1.5 shadow-lg backdrop-blur"
+>
+  <mat-button-toggle-group
+    [value]="mapStore.projection()"
+    (change)="setProjection($event.value)"
+    aria-label="Map projection"
+  >
+    <mat-button-toggle value="mercator" matTooltip="Flat Mercator map">
+      <mat-icon>map</mat-icon>
+      <span class="ml-1">Flat</span>
+    </mat-button-toggle>
+    <mat-button-toggle value="globe" matTooltip="3D Globe projection">
+      <mat-icon>public</mat-icon>
+      <span class="ml-1">Globe</span>
+    </mat-button-toggle>
+  </mat-button-toggle-group>
+
+  <mat-button-toggle-group
+    [value]="stationStore.codeDisplay()"
+    (change)="setCodeDisplay($event.value)"
+    aria-label="Station code format"
+  >
+    <mat-button-toggle value="icao" matTooltip="Prefer ICAO 4-letter codes">ICAO</mat-button-toggle>
+    <mat-button-toggle value="iata" matTooltip="Prefer IATA 3-letter codes">IATA</mat-button-toggle>
+  </mat-button-toggle-group>
+
+  <button
+    mat-flat-button
+    type="button"
+    [matMenuTriggerFor]="layersMenu"
+    aria-label="Configure map layers"
+  >
+    <mat-icon>layers</mat-icon>
+    Layers
+  </button>
+
+  <mat-menu #layersMenu="matMenu" xPosition="before">
+    <div
+      class="flex min-w-64 flex-col gap-1 px-3 py-2"
+      tabindex="-1"
+      (click)="$event.stopPropagation()"
+      (keydown)="$event.stopPropagation()"
+    >
+      <p class="pb-1 text-xs font-semibold uppercase tracking-wider text-ink-muted">
+        Layers (top to bottom)
+      </p>
+
+      @for (layer of stackedLayers(); track layer.id; let isFirst = $first; let isLast = $last) {
+        <div
+          class="flex items-center justify-between gap-2 rounded-lg px-2 py-1.5 hover:bg-surface-elevated"
+        >
+          <mat-slide-toggle
+            [checked]="layer.visible"
+            (change)="toggleLayer(layer.id, $event.checked)"
+          >
+            <span class="inline-flex items-center gap-1.5 text-xs font-medium text-ink">
+              <mat-icon class="layer-icon text-accent" aria-hidden="true">{{
+                layer.icon
+              }}</mat-icon>
+              <span>{{ layer.label }}</span>
+            </span>
+          </mat-slide-toggle>
+
+          <div class="flex items-center">
+            <button
+              mat-icon-button
+              type="button"
+              [disabled]="isFirst"
+              matTooltip="Move layer up"
+              aria-label="Move layer up"
+              (click)="moveLayer(layer.id, 'up', $event)"
+            >
+              <mat-icon>arrow_upward</mat-icon>
+            </button>
+            <button
+              mat-icon-button
+              type="button"
+              [disabled]="isLast"
+              matTooltip="Move layer down"
+              aria-label="Move layer down"
+              (click)="moveLayer(layer.id, 'down', $event)"
+            >
+              <mat-icon>arrow_downward</mat-icon>
+            </button>
+          </div>
+        </div>
+      }
+    </div>
+  </mat-menu>
+</div>

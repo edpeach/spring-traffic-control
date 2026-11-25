@@ -1,0 +1,74 @@
+server.port: ${BACKEND_PORT:8090}
+
+spring:
+  application.name: spring-traffic-control
+  datasource:
+    url: jdbc:duckdb:${PROJECT_DIR:.}/data/spring-traffic-control.duckdb
+    driver-class-name: org.duckdb.DuckDBDriver
+    hikari.maximum-pool-size: 5
+
+  ai:
+    chat:
+      client.enabled: false
+      observations:
+        log-prompt: true
+        log-completion: true
+        include-error-logging: true
+    tools:
+      observations:
+        include-content: true
+    google.genai:
+      api-key: ${GEMINI_API_KEY:disabled}
+      chat:
+        model: ${GEMINI_MODEL:gemini-3.8-flash}
+        include-thoughts: true
+    openai:
+      base-url: ${OLLAMA_BASE_URL:http://localhost:12434/engines/v1}
+      api-key: ${OLLAMA_API_KEY:not-applicable}
+      chat:
+        base-url: ${OLLAMA_BASE_URL:http://localhost:12434/engines/v1}
+        model: ${OLLAMA_MODEL:ai/gemma4:E2B}
+
+management:
+  tracing.sampling.probability: 1.0
+  otlp.metrics.export.step: 10s
+
+logging.level:
+  org.springframework.ai.chat.client.advisor.SimpleLoggerAdvisor: INFO
+  org.springframework.ai.google.genai: INFO
+  io.peaches.stc.agents: INFO
+
+spring-traffic-control:
+  demo:
+    enabled: ${DEMO_MODE:true}
+    seed-dir: ${SEED_DIR:${PROJECT_DIR:.}/data/seed}
+  openaip:
+    base-url: ${OPENAIP_BASE_URL:https://api.core.openaip.net/api}
+    api-key: ${OPENAIP_API_KEY:}
+  schiphol:
+    base-url: ${SCHIPHOL_BASE_URL:https://api.schiphol.nl/public/public-flights/v4}
+    token-url: ${SCHIPHOL_TOKEN_URL:https://api.auth.schiphol.nl/oauth/token}
+    client-id: ${SCHIPHOL_CLIENT_ID:}
+    client-secret: ${SCHIPHOL_CLIENT_SECRET:}
+    audience: ${SCHIPHOL_AUDIENCE:https://api.schiphol.nl/public}
+  opensky:
+    base-url: ${OPENSKY_BASE_URL:https://opensky-network.org/api}
+    token-url: ${OPENSKY_TOKEN_URL:https://auth.opensky-network.org/auth/realms/opensky-network/protocol/openid-connect/token}
+    client-id: ${OPENSKY_CLIENT_ID:}
+    client-secret: ${OPENSKY_CLIENT_SECRET:}
+    cache-ttl: ${OPENSKY_CACHE_TTL:30m}
+  agents:
+    provider: ${AGENT_PROVIDER:OLLAMA}
+    system-prompt: >-
+      You are the Spring Traffic Control aviation assistant.
+      Always determine user intent first and inspect the live UI state (currentRoute, currentPage, selectedStations, selectedLiveFlight, selectedScheduledFlight) before calling tools:
+      - Resolve references like "this", "it", "this airport", or "this flight" directly from the currently selected / open item in the UI state.
+      - When the user wants to show something on the map (e.g. "show me this on the map", "show Amsterdam on the map", "where is KL702"):
+        1. If the current route is not /map, navigate to /map (or use the map selection action which opens /map).
+        2. Then perform the appropriate map action:
+           - For an airport/station (e.g. EHAM/AMS from UI state or lookup): call triggerWebappAction("selectStationOnMap", {"code": "{code}"}) to select and fly to it on the map.
+           - For a live flight: call findFlightByCallsign if icao24 is not already in UI state, then call triggerWebappAction("selectFlightOnMap", {"icao24": "{icao24}"}).
+           - For a flight with closest airports: call findFlightByCallsign, then findNearestAirportsForFlight(icao24, limit=5), then triggerWebappAction("showClosestAirportsOnMap", {"icao24": icao24, "limit": 5, "stationCodes": [...]}).
+      - When the user explicitly asks to open details ("open station details", "flight details") or another page ("go to stations", "open flights"):
+        call triggerWebappAction("navigate", {"route": "/map" | "/stations" | "/flights" | "/stations/{code}" | "/flights/{flightName}"}).
+      Always keep your final text response concise since the A2UI cards and map already display the detailed telemetry.

@@ -1,0 +1,249 @@
+<section class="flex flex-col gap-4">
+  <header class="flex flex-wrap items-center justify-between gap-3">
+    <div>
+      <h1 class="text-xl font-semibold tracking-tight text-ink">Stations</h1>
+      <p class="text-xs text-ink-muted">
+        Showing {{ store.filteredStations().length }} of {{ store.totalCount() }} stations
+      </p>
+    </div>
+
+    <div class="flex flex-wrap items-center gap-3">
+      <mat-form-field appearance="outline" subscriptSizing="dynamic" class="w-64">
+        <mat-label>Search stations</mat-label>
+        <mat-icon matPrefix>search</mat-icon>
+        <input
+          matInput
+          type="search"
+          [value]="store.query()"
+          (input)="onSearch($event)"
+          placeholder="Name, ICAO, IATA, country..."
+        />
+      </mat-form-field>
+
+      <mat-button-toggle-group
+        [value]="store.codeDisplay()"
+        (change)="setCodeDisplay($event.value)"
+        aria-label="Station code format"
+      >
+        <mat-button-toggle value="icao" matTooltip="Prefer ICAO 4-letter codes">
+          ICAO
+        </mat-button-toggle>
+        <mat-button-toggle value="iata" matTooltip="Prefer IATA 3-letter codes">
+          IATA
+        </mat-button-toggle>
+      </mat-button-toggle-group>
+
+      <mat-button-toggle-group
+        [value]="store.viewMode()"
+        (change)="setViewMode($event.value)"
+        aria-label="Stations view mode"
+      >
+        <mat-button-toggle value="table">
+          <mat-icon>table_rows</mat-icon>
+          <span class="ml-1">Table</span>
+        </mat-button-toggle>
+        <mat-button-toggle value="cards">
+          <mat-icon>grid_view</mat-icon>
+          <span class="ml-1">Cards</span>
+        </mat-button-toggle>
+      </mat-button-toggle-group>
+
+      <button mat-flat-button type="button" [disabled]="store.syncing()" (click)="openSyncDialog()">
+        <mat-icon [class.animate-spin]="store.syncing()">sync</mat-icon>
+        {{ store.syncing() ? 'Syncing…' : 'Sync OpenAIP' }}
+      </button>
+    </div>
+  </header>
+
+  @if (store.syncMessage(); as syncMessage) {
+    <mat-card appearance="outlined" role="status" class="px-4 py-2">
+      <div class="flex items-center justify-between gap-2 text-xs text-ink">
+        <div class="flex items-center gap-2">
+          <mat-icon class="text-accent-bright">check_circle</mat-icon>
+          <span>{{ syncMessage }}</span>
+        </div>
+        <button
+          mat-icon-button
+          type="button"
+          aria-label="Dismiss sync message"
+          (click)="dismissSyncMessage()"
+        >
+          <mat-icon>close</mat-icon>
+        </button>
+      </div>
+    </mat-card>
+  }
+
+  @if (store.error(); as errorMessage) {
+    <mat-card appearance="outlined" role="alert" class="px-4 py-3">
+      <div class="flex items-center gap-2 text-sm text-ink">
+        <mat-icon class="text-accent-bright">error</mat-icon>
+        <span>{{ errorMessage }}</span>
+      </div>
+    </mat-card>
+  }
+
+  @if (store.loading()) {
+    <mat-card appearance="outlined" class="flex h-64 items-center justify-center">
+      <div class="flex flex-col items-center gap-3">
+        <mat-spinner diameter="32" />
+        <span class="text-sm text-ink-muted">Loading stations…</span>
+      </div>
+    </mat-card>
+  } @else if (store.filteredStations().length === 0) {
+    <mat-card
+      appearance="outlined"
+      class="flex h-64 flex-col items-center justify-center gap-1 text-center"
+    >
+      <mat-icon class="text-ink-muted">flight_land</mat-icon>
+      <p class="text-sm font-medium text-ink">No stations found</p>
+      <p class="text-xs text-ink-muted">Try adjusting your search query or sync from OpenAIP.</p>
+    </mat-card>
+  } @else if (store.viewMode() === 'table') {
+    <mat-card appearance="outlined" class="overflow-hidden">
+      <div
+        class="station-table-grid border-b border-edge bg-surface-elevated px-4 py-2.5 text-xs font-semibold uppercase tracking-wider text-ink-muted"
+        role="row"
+      >
+        <span role="columnheader">Code</span>
+        <span role="columnheader">Name</span>
+        <span role="columnheader">Country</span>
+        <span role="columnheader">Type</span>
+        <span role="columnheader">Location &amp; Elevation</span>
+        <span role="columnheader">Primary Freq</span>
+        <span role="columnheader" class="text-right">Notices</span>
+      </div>
+
+      <cdk-virtual-scroll-viewport
+        [itemSize]="56"
+        class="h-[calc(100dvh-18rem)] min-h-80 w-full"
+        role="table"
+        aria-label="Stations list"
+      >
+        <div
+          *cdkVirtualFor="let station of store.filteredStations(); trackBy: trackById"
+          role="row"
+          tabindex="0"
+          class="station-table-grid h-14 cursor-pointer items-center border-b border-edge/60 px-4 text-sm transition-colors hover:bg-surface-elevated/70 focus-visible:bg-surface-elevated focus-visible:outline-none"
+          (click)="openDetail(station)"
+          (keydown.enter)="openDetail(station)"
+        >
+          <div class="flex items-center gap-1.5" role="cell">
+            @if (store.codeDisplay() === 'iata') {
+              @if (station.iata) {
+                <span
+                  class="rounded bg-accent/15 px-1.5 py-0.5 font-mono text-xs font-semibold text-accent-bright"
+                >
+                  {{ station.iata }}
+                </span>
+              }
+              @if (station.icao) {
+                <span
+                  class="rounded border border-edge bg-surface-elevated px-1.5 py-0.5 font-mono text-xs text-ink"
+                >
+                  {{ station.icao }}
+                </span>
+              }
+            } @else {
+              @if (station.icao) {
+                <span
+                  class="rounded bg-accent/15 px-1.5 py-0.5 font-mono text-xs font-semibold text-accent-bright"
+                >
+                  {{ station.icao }}
+                </span>
+              }
+              @if (station.iata) {
+                <span
+                  class="rounded border border-edge bg-surface-elevated px-1.5 py-0.5 font-mono text-xs text-ink"
+                >
+                  {{ station.iata }}
+                </span>
+              }
+            }
+            @if (!station.icao && !station.iata) {
+              <span class="font-mono text-xs text-ink-muted">—</span>
+            }
+          </div>
+
+          <span class="truncate font-medium text-ink" role="cell" [title]="station.name">
+            {{ station.name }}
+          </span>
+
+          <span class="text-xs font-medium text-ink-muted" role="cell">
+            {{ station.country ?? '—' }}
+          </span>
+
+          <span class="truncate text-xs text-ink-muted" role="cell">
+            {{ formatAirportType(station.airportType) }}
+          </span>
+
+          <div class="truncate text-xs" role="cell">
+            <span class="font-mono text-ink">
+              {{ formatCoordinates(station.latitude, station.longitude) }}
+            </span>
+            <span class="ml-1.5 text-ink-muted">
+              {{ formatElevation(station.elevationMeters) }}
+            </span>
+          </div>
+
+          <span class="font-mono text-xs text-ink" role="cell">
+            {{ station.primaryFrequency ? station.primaryFrequency + ' MHz' : '—' }}
+          </span>
+
+          <div class="flex items-center justify-end gap-1" role="cell">
+            @if (station.ppr) {
+              <mat-icon
+                class="station-flag-icon text-accent-bright"
+                matTooltip="Prior Permission Required (PPR)"
+                aria-label="Prior Permission Required"
+              >
+                lock
+              </mat-icon>
+            }
+            @if (station.skydiveActivity) {
+              <mat-icon
+                class="station-flag-icon text-accent-bright"
+                matTooltip="Skydive Activity"
+                aria-label="Skydive Activity"
+              >
+                paragliding
+              </mat-icon>
+            }
+            @if (station.winchOnly) {
+              <mat-icon
+                class="station-flag-icon text-accent-bright"
+                matTooltip="Winch Launch Only"
+                aria-label="Winch Launch Only"
+              >
+                cable
+              </mat-icon>
+            }
+          </div>
+        </div>
+      </cdk-virtual-scroll-viewport>
+    </mat-card>
+  } @else {
+    <div #gridHost class="w-full">
+      <cdk-virtual-scroll-viewport
+        [itemSize]="268"
+        class="h-[calc(100dvh-16rem)] min-h-96 w-full"
+        aria-label="Stations card grid"
+      >
+        <div
+          *cdkVirtualFor="let row of cardRows(); trackBy: trackRow"
+          class="grid gap-4 pb-4"
+          [style.grid-template-columns]="'repeat(' + columns() + ', minmax(0, 1fr))'"
+        >
+          @for (station of row; track station.id) {
+            <app-station-card
+              [station]="station"
+              [codeDisplay]="store.codeDisplay()"
+              (viewDetails)="openDetail($event)"
+              (showOnMap)="showOnMap($event)"
+            />
+          }
+        </div>
+      </cdk-virtual-scroll-viewport>
+    </div>
+  }
+</section>

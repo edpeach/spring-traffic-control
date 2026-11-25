@@ -1,0 +1,30 @@
+:host {
+  display: block;
+  container-type: inline-size;
+}
+
+.turnaround-grid {
+  grid-template-columns: minmax(0, 1fr) minmax(11.5rem, 0.55fr) minmax(0, 1fr);
+}
+
+.turnaround-chips {
+  --mat-chip-container-height: 1.5rem;
+  --mat-chip-label-text-size: 0.75rem;
+  --mat-chip-label-text-line-height: 1rem;
+  justify-content: center;
+}
+
+.turnaround-icon {
+  font-size: 1rem;
+  width: 1rem;
+  height: 1rem;
+  line-height: 1rem;
+}
+
+@supports (container-type: inline-size) {
+  @container (max-width: 760px) {
+    .turnaround-grid {
+      grid-template-columns: 1fr;
+    }
+  }
+}

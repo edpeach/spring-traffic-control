@@ -1,0 +1,32 @@
+<div
+  class="flex flex-col bg-canvas text-ink"
+  [class.h-dvh]="isFullBleedRoute()"
+  [class.overflow-hidden]="isFullBleedRoute()"
+  [class.min-h-dvh]="!isFullBleedRoute()"
+>
+  <app-header class="sticky top-0 z-30 block shrink-0" />
+
+  <main
+    class="w-full flex-1"
+    [class.relative]="isFullBleedRoute()"
+    [class.overflow-hidden]="isFullBleedRoute()"
+    [class.mx-auto]="!isFullBleedRoute()"
+    [class.max-w-7xl]="!isFullBleedRoute()"
+    [class.px-4]="!isFullBleedRoute()"
+    [class.py-6]="!isFullBleedRoute()"
+    [class.sm:px-6]="!isFullBleedRoute()"
+    [class.lg:px-8]="!isFullBleedRoute()"
+  >
+    <router-outlet />
+  </main>
+</div>
+
+@if (!isFullBleedRoute()) {
+  <app-footer />
+}
+
+@if (!isAgentRoute()) {
+  @defer (on idle) {
+    <app-agent-drawer [fabOffsetRightPx]="isMapRoute() ? 25 : 0" />
+  }
+}

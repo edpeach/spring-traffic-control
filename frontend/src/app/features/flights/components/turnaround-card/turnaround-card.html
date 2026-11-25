@@ -1,0 +1,61 @@
+@let p = pair();
+
+<div class="turnaround-grid grid items-stretch gap-3">
+  <!-- Left: Arriving Flight Card -->
+  <div class="min-w-0">
+    @if (p.arrival; as arr) {
+      <app-flight-card [flight]="arr" (viewDetails)="selectFlight.emit($event)" />
+    } @else {
+      <div
+        class="flex h-full min-h-44 flex-col items-center justify-center gap-1 rounded-xl border border-dashed border-edge/70 bg-surface/40 p-4 text-center text-xs text-ink-muted"
+      >
+        <mat-icon class="turnaround-icon" aria-hidden="true">flight_land</mat-icon>
+        <span>No arrival linked</span>
+      </div>
+    }
+  </div>
+
+  <!-- Middle: Aircraft & Gate Details -->
+  <div
+    class="flex flex-col items-center justify-center gap-2 rounded-xl border border-edge/60 bg-surface-elevated/40 px-3 py-4 text-center"
+  >
+    <div class="inline-flex items-center gap-1.5 font-mono text-sm font-semibold text-ink">
+      <mat-icon class="turnaround-icon text-accent-bright" aria-hidden="true">
+        connecting_airports
+      </mat-icon>
+      <span>{{ p.aircraftRegistration }}</span>
+    </div>
+
+    <span class="font-mono text-xs text-ink-muted">{{ p.aircraftType }}</span>
+
+    <mat-chip-set class="turnaround-chips" aria-label="Aircraft gate and turnaround details">
+      <mat-chip>Gate {{ p.gate ?? '—' }}</mat-chip>
+      @if (p.pier) {
+        <mat-chip>Pier {{ p.pier }}</mat-chip>
+      }
+      @if (p.terminal) {
+        <mat-chip>T{{ p.terminal }}</mat-chip>
+      }
+      @if (p.groundMinutes !== null && p.groundMinutes !== undefined) {
+        <mat-chip [highlighted]="isTightTurnaround()">{{ p.groundMinutes }}m ground</mat-chip>
+      }
+      @if (p.hasDeparted) {
+        <mat-chip>Departed</mat-chip>
+      }
+    </mat-chip-set>
+  </div>
+
+  <!-- Right: Departing Flight Card -->
+  <div class="min-w-0">
+    @if (p.departure; as dep) {
+      <app-flight-card [flight]="dep" (viewDetails)="selectFlight.emit($event)" />
+    } @else {
+      <div
+        class="flex h-full min-h-44 flex-col items-center justify-center gap-1 rounded-xl border border-dashed border-edge/70 bg-surface/40 p-4 text-center text-xs text-ink-muted"
+      >
+        <mat-icon class="turnaround-icon" aria-hidden="true">flight_takeoff</mat-icon>
+        <span>No departure linked</span>
+      </div>
+    }
+  </div>
+</div>

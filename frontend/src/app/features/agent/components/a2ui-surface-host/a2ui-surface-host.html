@@ -1,0 +1,10 @@
+@if (resolved(); as binding) {
+  <ng-container
+    [ngComponentOutlet]="binding.component"
+    [ngComponentOutletInputs]="binding.inputs"
+  />
+} @else {
+  <div class="rounded-lg border border-edge bg-canvas px-3 py-2 text-xs text-ink-muted">
+    Unsupported A2UI surface: <span class="font-mono text-ink">{{ surface().component }}</span>
+  </div>
+}

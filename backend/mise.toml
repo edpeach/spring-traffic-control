@@ -1,0 +1,22 @@
+[tools]
+java = "25"
+kotlin = { version = "latest", asset_pattern = "kotlin-compiler-*.zip", bin_path = "kotlinc/bin" }
+gradle = "latest"
+
+[env]
+BACKEND_PORT = "{{ get_env(name='BACKEND_PORT', default='8090') }}"
+
+[tasks.dev]
+description = "Run Spring Boot 4.2 + Spring AI 2.1 backend on BACKEND_PORT (default 8090)"
+run = "./gradlew bootRun --args='--server.port=${BACKEND_PORT:-8090}'"
+
+[tasks.build]
+description = "Assemble Spring Boot 4.2 executable JAR"
+run = "./gradlew assemble"
+sources = ["build.gradle.kts", "src/main/**/*"]
+outputs = ["build/libs/*.jar"]
+
+[tasks.test]
+description = "Run Spring Boot 4.2 + Spring AI 2.1 JUnit 5 tests"
+run = "./gradlew test"
+sources = ["build.gradle.kts", "src/**/*"]

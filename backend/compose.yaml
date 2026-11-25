@@ -1,0 +1,19 @@
+services:
+  redis:
+    image: redis:7-alpine
+    ports:
+      - '6379:6379'
+
+  grafana-lgtm:
+    image: grafana/otel-lgtm:latest
+    ports:
+      - '3000:3000'
+      - '4317:4317'
+      - '4318:4318'
+    volumes:
+      - ./grafana/provisioning/spring-ai.yaml:/otel-lgtm/grafana/conf/provisioning/dashboards/spring-ai.yaml:ro
+      - ./grafana/dashboards/spring-ai-telemetry.json:/otel-lgtm/grafana-dashboard-spring-ai-telemetry.json:ro
+
+models:
+  gemma4:
+    model: ai/gemma4:E2B

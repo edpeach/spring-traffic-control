@@ -1,0 +1,39 @@
+<h2 mat-dialog-title>Sync Schiphol Day Schedule</h2>
+
+<mat-dialog-content>
+  <form
+    id="schedule-sync-form"
+    class="flex flex-col gap-4 pt-2"
+    (submit)="$event.preventDefault(); submit()"
+  >
+    <mat-form-field appearance="outline" subscriptSizing="dynamic">
+      <mat-label>Schedule Date (full day)</mat-label>
+      <input matInput type="date" [value]="scheduleDate()" (input)="onDateInput($event)" />
+    </mat-form-field>
+
+    <div class="flex flex-col gap-1.5">
+      <span class="text-xs font-medium text-ink-muted">Flight Direction</span>
+      <mat-button-toggle-group
+        [value]="direction()"
+        (change)="direction.set($event.value)"
+        aria-label="Sync direction"
+      >
+        <mat-button-toggle value="ALL">All</mat-button-toggle>
+        <mat-button-toggle value="A">Arrivals</mat-button-toggle>
+        <mat-button-toggle value="D">Departures</mat-button-toggle>
+      </mat-button-toggle-group>
+    </div>
+
+    <mat-checkbox [checked]="includeDelays()" (change)="includeDelays.set($event.checked)">
+      Include delayed flights shifted from previous day
+    </mat-checkbox>
+  </form>
+</mat-dialog-content>
+
+<mat-dialog-actions align="end">
+  <button mat-button type="button" (click)="cancel()">Cancel</button>
+  <button mat-flat-button type="submit" form="schedule-sync-form">
+    <mat-icon>sync</mat-icon>
+    Sync Full Day
+  </button>
+</mat-dialog-actions>

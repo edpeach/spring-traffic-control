@@ -1,0 +1,258 @@
+<section class="flex flex-col gap-5">
+  <div>
+    <a mat-button routerLink="/flights">
+      <mat-icon>arrow_back</mat-icon>
+      Back to Flight Schedule
+    </a>
+  </div>
+
+  @if (store.detailLoading()) {
+    <mat-card appearance="outlined" class="flex h-64 items-center justify-center">
+      <div class="flex flex-col items-center gap-3">
+        <mat-spinner diameter="32" />
+        <span class="text-sm text-ink-muted">Loading scheduled flight…</span>
+      </div>
+    </mat-card>
+  } @else if (store.error(); as errorMessage) {
+    <mat-card appearance="outlined" role="alert" class="px-4 py-3">
+      <div class="flex items-center gap-2 text-sm text-ink">
+        <mat-icon class="text-accent-bright">error</mat-icon>
+        <span>{{ errorMessage }}</span>
+      </div>
+    </mat-card>
+  } @else if (flight(); as f) {
+    <mat-card appearance="outlined">
+      <mat-card-header class="flex flex-wrap items-start justify-between gap-4">
+        <div>
+          <mat-card-title class="text-2xl font-semibold">
+            <span class="font-mono">{{ f.flightName }}</span>
+            <span class="ml-3 font-mono text-lg font-normal text-ink-muted">
+              {{ formatRoute(f) }}
+            </span>
+          </mat-card-title>
+          <mat-card-subtitle class="mt-1">
+            {{ f.flightDirection === 'A' ? 'Arrival' : 'Departure' }}
+            • {{ f.scheduleDate ?? '—' }} {{ f.scheduleTime ?? '' }} • ID: {{ f.id }}
+          </mat-card-subtitle>
+        </div>
+
+        <mat-chip-set aria-label="Flight metadata and status">
+          <mat-chip highlighted>
+            {{ f.flightDirection === 'A' ? 'Arrival (A)' : 'Departure (D)' }}
+          </mat-chip>
+          @if (f.mainFlight) {
+            <mat-chip>Main: {{ f.mainFlight }}</mat-chip>
+          }
+          @for (state of f.flightStates; track state) {
+            <mat-chip highlighted>{{ state }}</mat-chip>
+          }
+          @if (!f.isOperationalFlight) {
+            <mat-chip>Non-Operational</mat-chip>
+          }
+        </mat-chip-set>
+      </mat-card-header>
+    </mat-card>
+
+    <div class="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+      <mat-card appearance="outlined">
+        <mat-card-header>
+          <mat-card-title class="text-sm font-semibold">Timetable &amp; Live Times</mat-card-title>
+        </mat-card-header>
+        <mat-card-content class="pt-3">
+          <dl class="space-y-2 text-sm">
+            <div class="flex justify-between gap-2">
+              <dt class="text-ink-muted">Scheduled</dt>
+              <dd class="font-mono text-ink">{{ formatDateTime(f.scheduleDateTime) }}</dd>
+            </div>
+            @if (f.flightDirection === 'A') {
+              <div class="flex justify-between gap-2">
+                <dt class="text-ink-muted">Est. Landing</dt>
+                <dd class="font-mono text-ink">{{ formatDateTime(f.estimatedLandingTime) }}</dd>
+              </div>
+              <div class="flex justify-between gap-2">
+                <dt class="text-ink-muted">Actual Landing</dt>
+                <dd class="font-mono text-ink">{{ formatDateTime(f.actualLandingTime) }}</dd>
+              </div>
+              <div class="flex justify-between gap-2">
+                <dt class="text-ink-muted">Baggage On Belt</dt>
+                <dd class="font-mono text-ink">{{ formatDateTime(f.expectedTimeOnBelt) }}</dd>
+              </div>
+            } @else {
+              <div class="flex justify-between gap-2">
+                <dt class="text-ink-muted">Est. Off-Block</dt>
+                <dd class="font-mono text-ink">
+                  {{ formatDateTime(f.publicEstimatedOffBlockTime) }}
+                </dd>
+              </div>
+              <div class="flex justify-between gap-2">
+                <dt class="text-ink-muted">Actual Off-Block</dt>
+                <dd class="font-mono text-ink">{{ formatDateTime(f.actualOffBlockTime) }}</dd>
+              </div>
+              <div class="flex justify-between gap-2">
+                <dt class="text-ink-muted">Gate Open</dt>
+                <dd class="font-mono text-ink">{{ formatDateTime(f.expectedTimeGateOpen) }}</dd>
+              </div>
+              <div class="flex justify-between gap-2">
+                <dt class="text-ink-muted">Boarding</dt>
+                <dd class="font-mono text-ink">{{ formatDateTime(f.expectedTimeBoarding) }}</dd>
+              </div>
+              <div class="flex justify-between gap-2">
+                <dt class="text-ink-muted">Gate Closing</dt>
+                <dd class="font-mono text-ink">{{ formatDateTime(f.expectedTimeGateClosing) }}</dd>
+              </div>
+            }
+            <div class="flex justify-between gap-2">
+              <dt class="text-ink-muted">Last Updated</dt>
+              <dd class="font-mono text-ink">{{ formatDateTime(f.lastUpdatedAt) }}</dd>
+            </div>
+          </dl>
+        </mat-card-content>
+      </mat-card>
+
+      <mat-card appearance="outlined">
+        <mat-card-header>
+          <mat-card-title class="text-sm font-semibold"
+            >Terminal, Gate &amp; Baggage</mat-card-title
+          >
+        </mat-card-header>
+        <mat-card-content class="pt-3">
+          <dl class="space-y-2 text-sm">
+            <div class="flex justify-between gap-2">
+              <dt class="text-ink-muted">Terminal</dt>
+              <dd class="font-mono text-ink">{{ f.terminal ?? '—' }}</dd>
+            </div>
+            <div class="flex justify-between gap-2">
+              <dt class="text-ink-muted">Pier</dt>
+              <dd class="font-mono text-ink">{{ f.pier ?? '—' }}</dd>
+            </div>
+            <div class="flex justify-between gap-2">
+              <dt class="text-ink-muted">Gate</dt>
+              <dd class="font-mono text-ink">{{ f.gate ?? '—' }}</dd>
+            </div>
+            <div class="flex justify-between gap-2">
+              <dt class="text-ink-muted">Security Filter</dt>
+              <dd class="text-ink">{{ f.expectedSecurityFilter ?? '—' }}</dd>
+            </div>
+            <div class="flex justify-between gap-2">
+              <dt class="text-ink-muted">Baggage Belts</dt>
+              <dd class="font-mono text-ink">
+                {{ f.baggageBelts.length ? f.baggageBelts.join(', ') : '—' }}
+              </dd>
+            </div>
+            <div class="flex justify-between gap-2">
+              <dt class="text-ink-muted">Check-in Rows</dt>
+              <dd class="font-mono text-ink">
+                {{ f.checkinRows.length ? f.checkinRows.join(', ') : '—' }}
+              </dd>
+            </div>
+            <div class="flex justify-between gap-2">
+              <dt class="text-ink-muted">Transfer Positions</dt>
+              <dd class="font-mono text-ink">
+                {{ f.transferPositions.length ? f.transferPositions.join(', ') : '—' }}
+              </dd>
+            </div>
+          </dl>
+        </mat-card-content>
+      </mat-card>
+
+      <mat-card appearance="outlined">
+        <mat-card-header>
+          <mat-card-title class="text-sm font-semibold">Aircraft &amp; Airline</mat-card-title>
+        </mat-card-header>
+        <mat-card-content class="pt-3">
+          <dl class="space-y-2 text-sm">
+            <div class="flex justify-between gap-2">
+              <dt class="text-ink-muted">Registration</dt>
+              <dd class="font-mono text-ink">{{ f.aircraftRegistration ?? '—' }}</dd>
+            </div>
+            <div class="flex justify-between gap-2">
+              <dt class="text-ink-muted">Aircraft Type</dt>
+              <dd class="font-mono text-ink">{{ formatAircraftType(f) }}</dd>
+            </div>
+            <div class="flex justify-between gap-2">
+              <dt class="text-ink-muted">Airline Prefix</dt>
+              <dd class="font-mono text-ink">
+                {{ f.prefixIata ?? '—' }} / {{ f.prefixIcao ?? '—' }}
+              </dd>
+            </div>
+            <div class="flex justify-between gap-2">
+              <dt class="text-ink-muted">NVLS Airline Code</dt>
+              <dd class="font-mono text-ink">{{ f.airlineCode ?? '—' }}</dd>
+            </div>
+            <div class="flex justify-between gap-2">
+              <dt class="text-ink-muted">Service Type</dt>
+              <dd class="font-mono text-ink">{{ f.serviceType ?? '—' }}</dd>
+            </div>
+            <div class="flex justify-between gap-2">
+              <dt class="text-ink-muted">Region / Visa</dt>
+              <dd class="text-ink">
+                {{ f.routeEu ?? '—' }}
+                @if (f.routeVisa !== null && f.routeVisa !== undefined) {
+                  <span>• {{ f.routeVisa ? 'Visa required' : 'No visa' }}</span>
+                }
+              </dd>
+            </div>
+          </dl>
+        </mat-card-content>
+      </mat-card>
+    </div>
+
+    @if (f.codeshares.length) {
+      <mat-card appearance="outlined">
+        <mat-card-header>
+          <mat-card-title class="text-sm font-semibold">
+            Codeshares ({{ f.codeshares.length }})
+          </mat-card-title>
+        </mat-card-header>
+        <mat-card-content class="pt-3">
+          <div class="flex flex-wrap gap-2">
+            @for (code of f.codeshares; track code) {
+              <a mat-stroked-button [routerLink]="['/flights', code]" class="font-mono text-xs">
+                {{ code }}
+              </a>
+            }
+          </div>
+        </mat-card-content>
+      </mat-card>
+    }
+
+    <mat-card appearance="outlined">
+      <mat-card-header>
+        <mat-card-title class="text-sm font-semibold">
+          Check-in Allocations ({{ checkinTableRows().length }} row(s))
+        </mat-card-title>
+      </mat-card-header>
+      <mat-card-content class="pt-3">
+        @if (checkinTableRows().length === 0) {
+          <p class="py-4 text-sm text-ink-muted">No check-in desk allocations available.</p>
+        } @else {
+          <div class="overflow-x-auto">
+            <table mat-table [dataSource]="checkinTableRows()" class="w-full">
+              <ng-container matColumnDef="row">
+                <th mat-header-cell *matHeaderCellDef>Row</th>
+                <td mat-cell *matCellDef="let r" class="font-mono font-semibold text-accent-bright">
+                  {{ r.row }}
+                </td>
+              </ng-container>
+
+              <ng-container matColumnDef="desks">
+                <th mat-header-cell *matHeaderCellDef>Desks</th>
+                <td mat-cell *matCellDef="let r" class="font-mono">{{ r.desks }}</td>
+              </ng-container>
+
+              <ng-container matColumnDef="window">
+                <th mat-header-cell *matHeaderCellDef>Allocation Window</th>
+                <td mat-cell *matCellDef="let r" class="font-mono text-ink-muted">
+                  {{ r.window }}
+                </td>
+              </ng-container>
+
+              <tr mat-header-row *matHeaderRowDef="checkinColumns"></tr>
+              <tr mat-row *matRowDef="let row; columns: checkinColumns"></tr>
+            </table>
+          </div>
+        }
+      </mat-card-content>
+    </mat-card>
+  }
+</section>

@@ -1,0 +1,32 @@
+:host {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+
+.map-sidenav-container {
+  width: 100%;
+  height: 100%;
+}
+
+.map-left-panel {
+  --mat-sidenav-container-background-color: color-mix(
+    in srgb,
+    var(--token-surface) 80%,
+    transparent
+  );
+}
+
+.map-sidenav-content {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+}
+
+.map-canvas {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+}

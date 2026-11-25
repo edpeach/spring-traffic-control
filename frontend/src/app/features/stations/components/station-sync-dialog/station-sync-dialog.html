@@ -1,0 +1,112 @@
+<h2 mat-dialog-title>Sync Stations from OpenAIP</h2>
+
+<mat-dialog-content>
+  <form
+    id="station-sync-form"
+    class="flex flex-col gap-4 pt-2"
+    (submit)="$event.preventDefault(); submit()"
+  >
+    <div class="grid grid-cols-2 gap-3">
+      <mat-form-field appearance="outline" subscriptSizing="dynamic">
+        <mat-label>Country (ISO 2-letter)</mat-label>
+        <input
+          matInput
+          type="text"
+          maxlength="2"
+          [value]="country()"
+          (input)="onCountryInput($event)"
+          placeholder="NL"
+        />
+      </mat-form-field>
+
+      <mat-form-field appearance="outline" subscriptSizing="dynamic">
+        <mat-label>Search (optional)</mat-label>
+        <input
+          matInput
+          type="text"
+          [value]="search()"
+          (input)="onSearchInput($event)"
+          placeholder="Schiphol, EHAM..."
+        />
+      </mat-form-field>
+    </div>
+
+    <div class="flex flex-col gap-1.5">
+      <span class="text-xs font-medium text-ink-muted">Airport Types (optional)</span>
+      <mat-chip-listbox multiple aria-label="Airport types">
+        @for (t of airportTypes; track t.code) {
+          <mat-chip-option
+            [selected]="selectedTypes().includes(t.code)"
+            (selectionChange)="toggleAirportType(t.code)"
+          >
+            {{ t.label }}
+          </mat-chip-option>
+        }
+      </mat-chip-listbox>
+    </div>
+
+    <div class="flex flex-col gap-1.5">
+      <span class="text-xs font-medium text-ink-muted">Traffic Rules (optional)</span>
+      <mat-chip-listbox multiple aria-label="Traffic rules">
+        @for (tr of trafficTypes; track tr.code) {
+          <mat-chip-option
+            [selected]="selectedTrafficTypes().includes(tr.code)"
+            (selectionChange)="toggleTrafficType(tr.code)"
+          >
+            {{ tr.label }}
+          </mat-chip-option>
+        }
+      </mat-chip-listbox>
+    </div>
+
+    <div class="flex flex-col gap-1">
+      <span class="text-xs font-medium text-ink-muted">Operational Filters</span>
+      <div class="grid grid-cols-2 gap-1">
+        <mat-checkbox [checked]="ppr()" (change)="ppr.set($event.checked)">PPR only</mat-checkbox>
+        <mat-checkbox [checked]="isPrivate()" (change)="isPrivate.set($event.checked)">
+          Private only
+        </mat-checkbox>
+        <mat-checkbox [checked]="skydiveActivity()" (change)="skydiveActivity.set($event.checked)">
+          Skydive activity
+        </mat-checkbox>
+        <mat-checkbox [checked]="winchOnly()" (change)="winchOnly.set($event.checked)">
+          Winch only
+        </mat-checkbox>
+      </div>
+    </div>
+
+    <div class="grid grid-cols-2 gap-3">
+      <mat-form-field appearance="outline" subscriptSizing="dynamic">
+        <mat-label>Items per page (1–1000)</mat-label>
+        <input
+          matInput
+          type="number"
+          min="1"
+          max="1000"
+          [value]="limit()"
+          (input)="onLimitInput($event)"
+        />
+      </mat-form-field>
+
+      <mat-form-field appearance="outline" subscriptSizing="dynamic">
+        <mat-label>Max pages (1–50)</mat-label>
+        <input
+          matInput
+          type="number"
+          min="1"
+          max="50"
+          [value]="maxPages()"
+          (input)="onMaxPagesInput($event)"
+        />
+      </mat-form-field>
+    </div>
+  </form>
+</mat-dialog-content>
+
+<mat-dialog-actions align="end">
+  <button mat-button type="button" (click)="cancel()">Cancel</button>
+  <button mat-flat-button type="submit" form="station-sync-form">
+    <mat-icon>sync</mat-icon>
+    Sync from OpenAIP
+  </button>
+</mat-dialog-actions>

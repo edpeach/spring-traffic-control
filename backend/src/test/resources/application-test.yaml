@@ -1,0 +1,13 @@
+spring:
+  ai:
+    model:
+      chat: none
+  datasource:
+    url: jdbc:duckdb::memory:spring_traffic_control_test
+    driver-class-name: org.duckdb.DuckDBDriver
+    hikari:
+      maximum-pool-size: 1
+
+spring-traffic-control:
+  demo:
+    enabled: false

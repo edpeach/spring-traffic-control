@@ -1,0 +1,220 @@
+<div class="flex h-full min-h-0 flex-col">
+  <!-- Provider bar & quick reset -->
+  <div class="flex flex-wrap items-center justify-between gap-2 border-b border-edge px-4 py-2">
+    <div class="flex items-center gap-1.5" role="group" aria-label="Select AI model provider">
+      @for (p of store.providers(); track p.id) {
+        <button
+          type="button"
+          (click)="selectProvider(p.id)"
+          [disabled]="!p.available || store.isStreaming()"
+          [class.bg-accent]="store.provider() === p.id"
+          [class.text-accent-contrast]="store.provider() === p.id"
+          [class.bg-surface-elevated]="store.provider() !== p.id"
+          [class.text-ink-muted]="store.provider() !== p.id"
+          [class.opacity-50]="!p.available"
+          class="rounded-full border border-edge px-2.5 py-1 text-xs font-medium transition-colors hover:text-ink disabled:cursor-not-allowed"
+          [title]="p.available ? p.model : p.label + ' is not configured'"
+        >
+          {{ p.label }}
+        </button>
+      }
+    </div>
+
+    @if (store.hasMessages()) {
+      <button
+        type="button"
+        (click)="newChat()"
+        [disabled]="store.isStreaming()"
+        class="rounded-lg px-2 py-1 text-xs font-medium text-ink-muted transition-colors hover:bg-surface-elevated hover:text-ink disabled:opacity-50"
+      >
+        New chat
+      </button>
+    }
+  </div>
+
+  <!-- Transcript -->
+  <div
+    #transcriptContainer
+    (scroll)="onTranscriptScroll()"
+    class="flex-1 overflow-y-auto px-4 py-4"
+    [class.mx-auto]="mode() === 'fullscreen'"
+    [class.w-full]="mode() === 'fullscreen'"
+    [class.max-w-4xl]="mode() === 'fullscreen'"
+  >
+    @if (!store.hasMessages()) {
+      <div class="flex h-full flex-col items-center justify-center gap-4 py-8 text-center">
+        <span class="material-symbols-outlined text-4xl text-accent-bright" aria-hidden="true">
+          smart_toy
+        </span>
+        <div class="space-y-1">
+          <h3 class="text-sm font-semibold text-ink">Spring Traffic Control Agent</h3>
+          <p class="max-w-sm text-xs text-ink-muted">
+            Ask me to inspect airports, track live flights, render A2UI cards, or control the map.
+          </p>
+        </div>
+
+        <div class="flex flex-wrap justify-center gap-2 pt-2">
+          @for (suggestion of suggestions; track suggestion) {
+            <button
+              type="button"
+              (click)="send(suggestion)"
+              class="rounded-full border border-edge bg-surface-elevated px-3 py-1.5 text-xs text-ink transition-colors hover:border-accent hover:text-accent-bright"
+            >
+              {{ suggestion }}
+            </button>
+          }
+        </div>
+      </div>
+    } @else {
+      <div class="flex flex-col gap-4">
+        @for (msg of store.messages(); track msg.id) {
+          @if (msg.role === 'user') {
+            <div class="flex justify-end">
+              <div
+                class="max-w-[85%] rounded-2xl rounded-br-sm bg-accent px-3.5 py-2.5 text-sm text-accent-contrast shadow-sm"
+              >
+                {{ msg.text }}
+              </div>
+            </div>
+          } @else {
+            <div class="flex flex-col gap-2.5">
+              @if (msg.reasoning) {
+                <details class="rounded-xl border border-edge/70 bg-canvas/70 px-3 py-2 text-xs">
+                  <summary class="cursor-pointer select-none font-medium text-ink-muted">
+                    Model thinking
+                  </summary>
+                  <p class="mt-2 whitespace-pre-wrap font-mono text-[11px] text-ink-muted">
+                    {{ msg.reasoning }}
+                  </p>
+                </details>
+              }
+
+              @if (msg.toolCalls.length > 0) {
+                <div class="flex flex-wrap gap-1.5">
+                  @for (tc of msg.toolCalls; track tc.id) {
+                    <span
+                      class="inline-flex items-center gap-1 rounded-full border border-edge bg-surface-elevated px-2.5 py-0.5 text-[11px] text-ink-muted"
+                    >
+                      <span
+                        class="material-symbols-outlined text-xs text-accent-bright"
+                        aria-hidden="true"
+                      >
+                        {{ tc.status === 'running' ? 'sync' : 'check_circle' }}
+                      </span>
+                      <span class="font-mono">{{ tc.name }}</span>
+                    </span>
+                  }
+                </div>
+              }
+
+              @if (msg.surfaces.length > 0) {
+                <div
+                  class="grid gap-3"
+                  [class.grid-cols-1]="mode() === 'drawer'"
+                  [class.md:grid-cols-2]="mode() === 'fullscreen' && msg.surfaces.length > 1"
+                >
+                  @for (surface of msg.surfaces; track surface.surfaceId) {
+                    <app-a2ui-surface-host [surface]="surface" />
+                  }
+                </div>
+              }
+
+              @if (msg.text) {
+                <div
+                  class="chat-markdown rounded-2xl rounded-bl-sm border border-edge bg-surface-elevated px-3.5 py-2.5 text-sm text-ink"
+                >
+                  <markdown [data]="msg.text" />
+                </div>
+              } @else if (store.isStreaming() && msg.id === store.activeAssistantMessageId()) {
+                <div class="flex items-center gap-2 text-xs text-ink-muted">
+                  <span
+                    class="material-symbols-outlined animate-spin text-sm text-accent-bright"
+                    aria-hidden="true"
+                  >
+                    progress_activity
+                  </span>
+                  <span>Thinking…</span>
+                </div>
+              }
+            </div>
+          }
+        }
+      </div>
+    }
+
+    @if (store.error(); as errorText) {
+      <div
+        role="alert"
+        class="mt-3 rounded-xl border border-edge bg-canvas px-3 py-2 text-xs text-ink"
+      >
+        <strong class="text-accent-bright">Error:</strong> {{ errorText }}
+      </div>
+    }
+  </div>
+
+  <!-- Composer -->
+  <form
+    (submit)="$event.preventDefault(); send()"
+    class="border-t border-edge p-3"
+    [class.mx-auto]="mode() === 'fullscreen'"
+    [class.w-full]="mode() === 'fullscreen'"
+    [class.max-w-4xl]="mode() === 'fullscreen'"
+  >
+    @if (speech.error(); as speechError) {
+      <p role="alert" class="mb-2 px-1 text-xs text-ink-muted">
+        {{ speechError }}
+      </p>
+    }
+
+    <div
+      class="flex items-end gap-2 rounded-xl border bg-canvas p-2 focus-within:border-accent"
+      [class.border-accent]="speech.isListening()"
+      [class.border-edge]="!speech.isListening()"
+    >
+      <textarea
+        rows="1"
+        [value]="draft()"
+        (input)="onInput($event)"
+        (keydown)="onKeydown($event)"
+        [disabled]="store.isStreaming()"
+        [placeholder]="
+          speech.isListening()
+            ? 'Listening… speak your command'
+            : 'Ask the agent (e.g. Open the map, Show KL702 with 5 closest airports)…'
+        "
+        aria-label="Message the Traffic Control Agent"
+        class="max-h-32 min-h-[36px] flex-1 resize-none bg-transparent px-1.5 py-1 text-sm text-ink placeholder:text-ink-muted focus:outline-none"
+      ></textarea>
+
+      @if (speech.isSupported) {
+        <button
+          type="button"
+          (click)="toggleVoiceInput()"
+          [disabled]="store.isStreaming()"
+          [attr.aria-pressed]="speech.isListening()"
+          [attr.aria-label]="speech.isListening() ? 'Stop voice input' : 'Start voice input'"
+          [title]="speech.isListening() ? 'Stop listening and send' : 'Speak to the agent'"
+          [class.bg-accent]="speech.isListening()"
+          [class.text-accent-contrast]="speech.isListening()"
+          [class.animate-pulse]="speech.isListening()"
+          [class.bg-surface-elevated]="!speech.isListening()"
+          [class.text-ink]="!speech.isListening()"
+          class="flex size-9 shrink-0 items-center justify-center rounded-lg border border-edge transition-colors hover:border-accent disabled:cursor-not-allowed disabled:opacity-40"
+        >
+          <span class="material-symbols-outlined text-lg" aria-hidden="true">
+            {{ speech.isListening() ? 'graphic_eq' : 'mic' }}
+          </span>
+        </button>
+      }
+
+      <button
+        type="submit"
+        [disabled]="!draft().trim() || store.isStreaming()"
+        aria-label="Send message"
+        class="flex size-9 shrink-0 items-center justify-center rounded-lg bg-accent text-accent-contrast transition-opacity hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-40"
+      >
+        <span class="material-symbols-outlined text-lg" aria-hidden="true">send</span>
+      </button>
+    </div>
+  </form>
+</div>

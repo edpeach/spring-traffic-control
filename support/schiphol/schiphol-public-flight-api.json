@@ -1,0 +1,1149 @@
+{
+  "openapi": "3.0.1",
+  "info": {
+    "title": "Schiphol Public Flight API",
+    "description": "Public-Flights Flight API",
+    "contact": {
+      "name": "api-support@schiphol.nl"
+    },
+    "version": "4.2.0"
+  },
+  "servers": [
+    {
+      "url": "https://{environment}.schiphol.nl/public/public-flights/v4",
+      "variables": {
+        "environment": {
+          "enum": [
+            "api",
+            "api-acc"
+          ],
+          "default": "api"
+        }
+      }
+    }
+  ],
+  "paths": {
+    "/flights/{id}": {
+      "get": {
+        "summary": "Retrieves a Flight based on flight-id",
+        "operationId": "flightById",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/AcceptHeader"
+          },
+          {
+            "name": "id",
+            "in": "path",
+            "description": "Unique numeric id of flight",
+            "required": true,
+            "schema": {
+              "pattern": "^[0-9]+$",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Flight"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad request",
+            "content": {}
+          },
+          "404": {
+            "description": "Not Found",
+            "content": {}
+          }
+        }
+      }
+    },
+    "/flights/ids": {
+      "get": {
+        "summary": "Retrieve flight IDs based on a datetime range",
+        "description": "Returns a list of flight IDs for flights scheduled within the specified datetime range (filters on scheduleDateTime). Max date range is three days.",
+        "operationId": "flightByIds",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/AcceptHeader"
+          },
+          {
+            "name": "fromDateTime",
+            "in": "query",
+            "description": "From date of search period. Format: yyyy-MM-dd'T'HH:mm:ss",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "local-date-time"
+            }
+          },
+          {
+            "name": "toDateTime",
+            "in": "query",
+            "description": "To date of search period (inclusive). Format: yyyy-MM-dd'T'HH:mm:ss",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "local-date-time"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "List of flight IDs",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "type": "string",
+                    "example": "141988470640710484"
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid request parameters"
+          },
+          "500": {
+            "description": "Internal server error"
+          }
+        }
+      }
+    },
+    "/flights": {
+      "get": {
+        "summary": "Retrieves flights for a specific date",
+        "description": "Retrieves flights for a specific date. If scheduleDate is provided as query parameter, it will retrieve flights for that date. If not provided it is defaulted to today. If there are more hits then allowed on one page response headers will contain the URLs where other pages of the results can be reached.For example:<br/>Link: &lt;protocol://server_address:port/public-flights/resource&gt; ; rel=\"first\", <br/>&lt;protocol://server_address:port/public-flights/resource?page=10&gt; rel=\"last\", <br/>&lt;protocol://server_address:port/public-flights/resource?page=3&gt; rel=\"next\", <br/>&lt;protocol://server_address:port/public-flights/resource?page=1&gt; rel=\"prev\"<br/><br/>",
+        "operationId": "getFlights",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/AcceptHeader"
+          },
+          {
+            "name": "scheduleDate",
+            "in": "query",
+            "description": "Scheduled date to get flights for. Format: yyyy-MM-dd. Defaults to today if not provided",
+            "schema": {
+              "type": "string",
+              "format": "date"
+            }
+          },
+          {
+            "name": "scheduledate",
+            "in": "query",
+            "description": "See: scheduleDate. Prefer scheduleDate. If both scheduleDate and scheduledate are used scheduleDate takes precedence",
+            "schema": {
+              "type": "string",
+              "format": "date"
+            }
+          },
+          {
+            "name": "scheduleTime",
+            "in": "query",
+            "description": "Scheduled time to get flights from. Format: HH:mm",
+            "schema": {
+              "type": "string",
+              "format": "hour-minute"
+            }
+          },
+          {
+            "name": "flightName",
+            "in": "query",
+            "description": "Flight number as printed on the ticket",
+            "schema": {
+              "maxLength": 8,
+              "minLength": 5,
+              "type": "string"
+            }
+          },
+          {
+            "name": "flightname",
+            "in": "query",
+            "description": "See: flightName. Prefer flightName. If both flightName and flightname are used flightName takes precedence",
+            "schema": {
+              "maxLength": 8,
+              "minLength": 5,
+              "type": "string"
+            }
+          },
+          {
+            "name": "flightDirection",
+            "in": "query",
+            "description": "Direction of the flight",
+            "schema": {
+              "type": "string",
+              "enum": [
+                "A",
+                "D"
+              ]
+            }
+          },
+          {
+            "name": "flightdirection",
+            "in": "query",
+            "description": "See: flightDirection. Prefer using flightDirection. If both flightDirection and flightdirection are used flightDirection takes precedence",
+            "schema": {
+              "type": "string",
+              "enum": [
+                "A",
+                "D"
+              ]
+            }
+          },
+          {
+            "name": "airline",
+            "in": "query",
+            "description": "Prefix in flight number as printed on the ticket. For exmaple: KL. This can either be a 2-character (IATA) airline prefix or 3-character (ICAO) airline prefix. Only one airline (or airlineCode) can be queried at the same time. ",
+            "schema": {
+              "maxLength": 3,
+              "minLength": 2,
+              "type": "string"
+            }
+          },
+          {
+            "name": "airlineCode",
+            "in": "query",
+            "description": "NVLS code of an airliner.",
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            }
+          },
+          {
+            "name": "route",
+            "in": "query",
+            "description": "IATA or ICAO code of airport in route; multiple values, comma separated",
+            "schema": {
+              "minLength": 1,
+              "type": "string"
+            }
+          },
+          {
+            "name": "includedelays",
+            "in": "query",
+            "description": "Include flights of earlier an scheduleDate when these have enough delay to shift to the date that is queried upon.",
+            "schema": {
+              "type": "boolean",
+              "default": false
+            }
+          },
+          {
+            "name": "includeDelays",
+            "in": "query",
+            "description": "See: includedelays. Prefer includedelays. If both includeDelays and includeDelays are used, includedelays take precedence.",
+            "schema": {
+              "type": "boolean",
+              "default": false
+            }
+          },
+          {
+            "name": "page",
+            "in": "query",
+            "description": "Page number",
+            "schema": {
+              "maximum": 499,
+              "minimum": 0,
+              "type": "integer",
+              "format": "int32",
+              "default": 0
+            }
+          },
+          {
+            "name": "sort",
+            "in": "query",
+            "description": "Specifies which field to use for sorting. Allowed values are flightName, scheduleDate, scheduleTime, flightDirection, mainFlight, airlineCode, id, and all fields from the searchDateTimeField parameter. Use plus or minus sign to indicate ascending or descending order. Multiple fields are allowed and should be separated by a comma. For example \"-scheduleDate, +scheduleTime\".",
+            "schema": {
+              "pattern": "^((\\+|-| )?(flightName|scheduleDate|scheduleTime|flightDirection|mainFlight|airlineCode|id|estimatedLandingTime|actualLandingTime|publicEstimatedOffBlockTime|actualOffBlockTime|expectedTimeBoarding|expectedTimeGateClosing|expectedTimeGateOpen|expectedTimeOnBelt|scheduleDateTime|lastUpdatedAt)(,|$))+$",
+              "type": "string",
+              "default": "+scheduleTime"
+            }
+          },
+          {
+            "name": "fromDateTime",
+            "in": "query",
+            "description": "From date of search period. Format: yyyy-MM-dd'T'HH:mm:ss",
+            "schema": {
+              "type": "string",
+              "format": "local-date-time"
+            }
+          },
+          {
+            "name": "toDateTime",
+            "in": "query",
+            "description": "To date of search period (inclusive). Format: yyyy-MM-dd'T'HH:mm:ss",
+            "schema": {
+              "type": "string",
+              "format": "local-date-time"
+            }
+          },
+          {
+            "name": "searchDateTimeField",
+            "in": "query",
+            "description": "Query by a specific DateTime field. Allowed fields are estimatedLandingTime, actualLandingTime, publicEstimatedOffBlockTime, actualOffBlockTime, expectedTimeBoarding, expectedTimeGateClosing, expectedTimeGateOpen, expectedTimeOnBelt, scheduleDateTime, lastUpdatedAt",
+            "schema": {
+              "type": "string",
+              "enum": [
+                "estimatedLandingTime",
+                "actualLandingTime",
+                "publicEstimatedOffBlockTime",
+                "actualOffBlockTime",
+                "expectedTimeBoarding",
+                "expectedTimeGateClosing",
+                "expectedTimeGateOpen",
+                "expectedTimeOnBelt",
+                "scheduleDateTime",
+                "lastUpdatedAt"
+              ]
+            }
+          },
+          {
+            "name": "fromScheduleDate",
+            "in": "query",
+            "description": "Query by ScheduleDate range.",
+            "schema": {
+              "type": "string",
+              "format": "date"
+            }
+          },
+          {
+            "name": "toScheduleDate",
+            "in": "query",
+            "description": "Query by ScheduleDate range",
+            "schema": {
+              "type": "string",
+              "format": "date"
+            }
+          },
+          {
+            "name": "isOperationalFlight",
+            "in": "query",
+            "description": "Query based on operational/non-operational flights.true for operational and false for non-operational flights",
+            "schema": {
+              "type": "boolean"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/FlightList"
+                }
+              }
+            }
+          },
+          "204": {
+            "description": "No content",
+            "content": {}
+          },
+          "400": {
+            "description": "Bad request",
+            "content": {}
+          }
+        }
+      }
+    },
+    "/airlines": {
+      "get": {
+        "summary": "Retrieves list of airlines",
+        "description": "Retrieves a list of airlines. If there are more hits then allowed on one page response headers will contain the URLs where other pages of the results can be reached.For example:<br/>Link: &lt;protocol://server_address:port/public-flights/resource&gt; ; rel=\"first\", <br/>&lt;protocol://server_address:port/public-flights/resource?page=10&gt; rel=\"last\", <br/>&lt;protocol://server_address:port/public-flights/resource?page=3&gt; rel=\"next\", <br/>&lt;protocol://server_address:port/public-flights/resource?page=1&gt; rel=\"prev\"<br/><br/>",
+        "operationId": "getAirlines",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/AcceptHeader"
+          },
+          {
+            "name": "page",
+            "in": "query",
+            "description": "page number",
+            "schema": {
+              "maximum": 499,
+              "minimum": 0,
+              "type": "integer",
+              "format": "int32",
+              "default": 0
+            }
+          },
+          {
+            "name": "sort",
+            "in": "query",
+            "description": "Specifies which field to use for sorting. Allowed fields are publicName, iata, icao and nvls. Use plus or minus sign to indicate ascending or descending order.",
+            "schema": {
+              "pattern": "^((\\+|-| )?(publicName|iata|icao|nvls)(,|$))+$",
+              "type": "string",
+              "default": "+iata"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AirlineList"
+                }
+              }
+            }
+          },
+          "204": {
+            "description": "No content",
+            "content": {}
+          },
+          "400": {
+            "description": "Bad request",
+            "content": {}
+          }
+        }
+      }
+    },
+    "/airlines/{airline}": {
+      "get": {
+        "summary": "Retrieves airline based on code (IATA or ICAO)",
+        "description": "Retrieve airline based on IATA code or ICAO code.",
+        "operationId": "getAirlinesByCode",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/AcceptHeader"
+          },
+          {
+            "name": "airline",
+            "in": "path",
+            "description": "IATA / ICAO code",
+            "required": true,
+            "schema": {
+              "maxLength": 3,
+              "minLength": 2,
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Airline"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad request",
+            "content": {}
+          },
+          "404": {
+            "description": "Not Found",
+            "content": {}
+          }
+        }
+      }
+    },
+    "/aircrafttypes": {
+      "get": {
+        "summary": "Retrieves list of aircrafttypes",
+        "description": "Retrieves list of aircrafttypes. If there are more hits then allowed on one page response headers will contain the URLs where other pages of the results can be reached.For example:<br/>Link: &lt;protocol://server_address:port/public-flights/resource&gt; ; rel=\"first\", <br/>&lt;protocol://server_address:port/public-flights/resource?page=10&gt; rel=\"last\", <br/>&lt;protocol://server_address:port/public-flights/resource?page=3&gt; rel=\"next\", <br/>&lt;protocol://server_address:port/public-flights/resource?page=1&gt; rel=\"prev\"<br/><br/>",
+        "operationId": "getAircraftTypes",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/AcceptHeader"
+          },
+          {
+            "name": "iataMain",
+            "in": "query",
+            "description": "IATA main code",
+            "schema": {
+              "maxLength": 3,
+              "minLength": 3,
+              "type": "string"
+            }
+          },
+          {
+            "name": "iataSub",
+            "in": "query",
+            "description": "IATA sub code",
+            "schema": {
+              "maxLength": 3,
+              "minLength": 3,
+              "type": "string"
+            }
+          },
+          {
+            "name": "page",
+            "in": "query",
+            "description": "Page number",
+            "schema": {
+              "maximum": 499,
+              "minimum": 0,
+              "type": "integer",
+              "format": "int32",
+              "default": 0
+            }
+          },
+          {
+            "name": "sort",
+            "in": "query",
+            "description": "Specifies which field to use for sorting. Allowed fields are iataMain, iataSub, longDescription and shortDescription. Use plus or minus sign to indicate ascending or descending order.",
+            "schema": {
+              "pattern": "^((\\+|-| )?(iataMain|iataSub|longDescription|shortDescription)(,|$))+$",
+              "type": "string",
+              "default": "+iataMain"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AircraftTypeList"
+                }
+              }
+            }
+          },
+          "204": {
+            "description": "No content",
+            "content": {}
+          },
+          "400": {
+            "description": "Bad request",
+            "content": {}
+          }
+        }
+      }
+    },
+    "/destinations": {
+      "get": {
+        "summary": "Retrieves list of destinations",
+        "description": "Retrieves list of destinations<br/><br/>If there are more pages of the result, header will contain custom String field - Link, which will contain URLs where other pages of the results can be reached.<br/>For example:<br/>Link: &lt;protocol://server_address:port/public-flights/resource&gt; ; rel=\"first\", <br/>&lt;protocol://server_address:port/public-flights/resource?page=10&gt; rel=\"last\", <br/>&lt;protocol://server_address:port/public-flights/resource?page=3&gt; rel=\"next\", <br/>&lt;protocol://server_address:port/public-flights/resource?page=1&gt; rel=\"prev\"<br/><br/>",
+        "operationId": "getDestinations",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/AcceptHeader"
+          },
+          {
+            "name": "page",
+            "in": "query",
+            "description": "Page number",
+            "schema": {
+              "maximum": 499,
+              "minimum": 0,
+              "type": "integer",
+              "format": "int32",
+              "default": 0
+            }
+          },
+          {
+            "name": "sort",
+            "in": "query",
+            "description": "Specifies which field to use for sorting. Allowed fields are publicName.dutch, publicName.english, iata, country and city.. Use plus or minus sign to indicate ascending or descending order.",
+            "schema": {
+              "pattern": "^((\\+|-| )?(publicName\\.dutch|publicName\\.english|iata|country|city)(,|$))+$",
+              "type": "string",
+              "default": "+iata"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DestinationList"
+                }
+              }
+            }
+          },
+          "204": {
+            "description": "No content",
+            "content": {}
+          },
+          "400": {
+            "description": "Bad request",
+            "content": {}
+          }
+        }
+      }
+    },
+    "/destinations/{iata}": {
+      "get": {
+        "summary": "Retrieves destination based on IATA code",
+        "description": "Retrieves destination based on IATA code",
+        "operationId": "getDestinationsByCode",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/AcceptHeader"
+          },
+          {
+            "name": "iata",
+            "in": "path",
+            "description": "IATA code",
+            "required": true,
+            "schema": {
+              "maxLength": 3,
+              "minLength": 3,
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Destination"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad request",
+            "content": {}
+          },
+          "404": {
+            "description": "Not Found",
+            "content": {}
+          }
+        }
+      }
+    }
+  },
+  "security": [
+    {
+      "bearerAuth": []
+    }
+  ],
+  "components": {
+    "securitySchemes": {
+      "bearerAuth": {
+        "type": "http",
+        "scheme": "bearer",
+        "bearerFormat": "JWT"
+      }
+    },
+    "parameters": {
+      "AcceptHeader": {
+        "name": "Accept",
+        "in": "header",
+        "description": "Only 'application/json' is allowed",
+        "required": true,
+        "style": "simple",
+        "schema": {
+          "type": "string",
+          "example": "application/json"
+        }
+      },
+      "ResourceVersionHeader": {
+        "name": "ResourceVersion",
+        "in": "header",
+        "description": "Resource version of the API",
+        "required": true,
+        "style": "simple",
+        "schema": {
+          "type": "string",
+          "example": "v4",
+          "pattern": "v4"
+        }
+      }
+    },
+    "schemas": {
+      "RowType": {
+        "type": "object",
+        "description": "Check-in row allocated to the flight.",
+        "properties": {
+          "position": {
+            "type": "string",
+            "description": "Position of the check-in row."
+          },
+          "desks": {
+            "$ref": "#/components/schemas/DesksType"
+          }
+        }
+      },
+      "BaggageClaimType": {
+        "type": "object",
+        "description": "Baggage reclaim information for an arriving flight.",
+        "properties": {
+          "belts": {
+            "type": "array",
+            "description": "Baggage reclaim belts where arriving passengers can collect their luggage.",
+            "items": {
+              "type": "string"
+            }
+          }
+        }
+      },
+      "RemarksType": {
+        "type": "object",
+        "description": "Remarks about the check-in allocations.",
+        "properties": {
+          "remarks": {
+            "type": "array",
+            "description": "Remarks about the check-in allocations.",
+            "items": {
+              "type": "string"
+            }
+          }
+        }
+      },
+      "CodesharesType": {
+        "type": "object",
+        "description": "Codeshare flights related to the main flight.",
+        "properties": {
+          "codeshares": {
+            "type": "array",
+            "description": "All flight names related to the main flight.",
+            "items": {
+              "type": "string"
+            }
+          }
+        }
+      },
+      "FlightList": {
+        "type": "object",
+        "properties": {
+          "flights": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Flight"
+            }
+          }
+        }
+      },
+      "CheckinAllocationType": {
+        "type": "object",
+        "description": "Check-in allocation for the flight.",
+        "properties": {
+          "endTime": {
+            "type": "string",
+            "description": "End time of the check-in allocation.",
+            "format": "date-time"
+          },
+          "rows": {
+            "$ref": "#/components/schemas/RowsType"
+          },
+          "startTime": {
+            "type": "string",
+            "description": "Start time of the check-in allocation.",
+            "format": "date-time"
+          }
+        }
+      },
+      "RowsType": {
+        "type": "object",
+        "description": "Check-in rows in the allocation.",
+        "properties": {
+          "rows": {
+            "type": "array",
+            "description": "Check-in rows in the allocation.",
+            "items": {
+              "$ref": "#/components/schemas/RowType"
+            }
+          }
+        }
+      },
+      "PublicName": {
+        "type": "object",
+        "description": "Public names of the destination.",
+        "properties": {
+          "dutch": {
+            "type": "string",
+            "description": "Public name in Dutch. Example: Venetië."
+          },
+          "english": {
+            "type": "string",
+            "description": "Public name in English. Example: Venice."
+          }
+        }
+      },
+      "DestinationList": {
+        "type": "object",
+        "properties": {
+          "destinations": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Destination"
+            }
+          }
+        }
+      },
+      "Destination": {
+        "type": "object",
+        "description": "Destination served by flights to or from Amsterdam Airport Schiphol.",
+        "properties": {
+          "city": {
+            "type": "string",
+            "description": "City name in English. Example: Venice."
+          },
+          "country": {
+            "type": "string",
+            "description": "Name of the country where the destination is located, in English."
+          },
+          "iata": {
+            "type": "string",
+            "description": "Three-letter IATA code of the destination airport. Example: VCE."
+          },
+          "publicName": {
+            "$ref": "#/components/schemas/PublicName"
+          }
+        }
+      },
+      "Airline": {
+        "type": "object",
+        "description": "Passenger airline operating to or from Amsterdam Airport Schiphol.",
+        "properties": {
+          "iata": {
+            "type": "string",
+            "description": "Two-character IATA airline code. Example: KL."
+          },
+          "icao": {
+            "type": "string",
+            "description": "Three-letter ICAO airline code. Example: KLM."
+          },
+          "nvls": {
+            "type": "integer",
+            "description": "Numeric NVLS airline code.",
+            "format": "int64"
+          },
+          "publicName": {
+            "type": "string",
+            "description": "Public name of the airline. Example: KLM."
+          }
+        }
+      },
+      "AirlineList": {
+        "type": "object",
+        "properties": {
+          "airlines": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Airline"
+            }
+          }
+        }
+      },
+      "AircraftType": {
+        "type": "object",
+        "description": "Aircraft type operated on flights to or from Amsterdam Airport Schiphol.",
+        "properties": {
+          "iataMain": {
+            "type": "string",
+            "description": "Three-character IATA main aircraft type code. Example: 739."
+          },
+          "iataSub": {
+            "type": "string",
+            "description": "Three-character IATA aircraft subtype code. Example: 73J."
+          },
+          "longDescription": {
+            "type": "string",
+            "description": "Long public name of the aircraft type. Example: Boeing 737-900 Winglets."
+          },
+          "shortDescription": {
+            "type": "string",
+            "description": "Short name of the aircraft type. Example: Boeing 737-900/W."
+          }
+        }
+      },
+      "AircraftTypeList": {
+        "type": "object",
+        "properties": {
+          "aircraftTypes": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/AircraftType"
+            }
+          }
+        }
+      },
+      "Flight": {
+        "type": "object",
+        "description": "Public flight information.",
+        "properties": {
+          "lastUpdatedAt": {
+            "type": "string",
+            "description": "Time of the last update to the flight in the flight information system.",
+            "format": "date-time"
+          },
+          "actualLandingTime": {
+            "type": "string",
+            "description": "Actual landing time (ALDT): the time the aircraft landed on the runway. Format: yyyy-MM-dd'T'HH:mm:ss.SSSZ",
+            "format": "date-time"
+          },
+          "actualOffBlockTime": {
+            "type": "string",
+            "description": "Actual off-block time (AOBT): the actual departure time from Amsterdam Airport Schiphol. Format: yyyy-MM-dd'T'HH:mm:ss.SSSZ",
+            "format": "date-time"
+          },
+          "aircraftRegistration": {
+            "type": "string",
+            "description": "Registration of the aircraft that operates the main flight. Example: PHTFA."
+          },
+          "aircraftType": {
+            "$ref": "#/components/schemas/AircraftTypeType"
+          },
+          "baggageClaim": {
+            "$ref": "#/components/schemas/BaggageClaimType"
+          },
+          "checkinAllocations": {
+            "$ref": "#/components/schemas/CheckinAllocationsType"
+          },
+          "codeshares": {
+            "$ref": "#/components/schemas/CodesharesType"
+          },
+          "estimatedLandingTime": {
+            "type": "string",
+            "description": "Estimated landing time (ELDT) of an arriving flight at Amsterdam Airport Schiphol. Format: yyyy-MM-dd'T'HH:mm:ss.SSSZ",
+            "format": "date-time"
+          },
+          "expectedTimeBoarding": {
+            "type": "string",
+            "description": "Expected time that passenger boarding starts. Format: yyyy-MM-dd'T'HH:mm:ss.SSSZ",
+            "format": "date-time"
+          },
+          "expectedTimeGateClosing": {
+            "type": "string",
+            "description": "Expected time that the flight handler closes the gate. Format: yyyy-MM-dd'T'HH:mm:ss.SSSZ",
+            "format": "date-time"
+          },
+          "expectedTimeGateOpen": {
+            "type": "string",
+            "description": "Expected time that the flight handler opens the gate. Format: yyyy-MM-dd'T'HH:mm:ss.SSSZ",
+            "format": "date-time"
+          },
+          "expectedTimeOnBelt": {
+            "type": "string",
+            "description": "Expected time that the first baggage from the flight is on the reclaim belt. Format: yyyy-MM-dd'T'HH:mm:ss.SSSZ",
+            "format": "date-time"
+          },
+          "expectedSecurityFilter": {
+            "type": "string",
+            "description": "expected security filter"
+          },
+          "flightDirection": {
+            "type": "string",
+            "description": "Direction of the flight: A = arrival, D = departure.",
+            "enum": [
+              "A",
+              "D"
+            ]
+          },
+          "flightName": {
+            "type": "string",
+            "description": "Flight name as shown on the passenger's ticket. Example: KL672."
+          },
+          "flightNumber": {
+            "type": "integer",
+            "description": "Numeric part of the flight name. Example: 672.",
+            "format": "int64"
+          },
+          "gate": {
+            "type": "string",
+            "description": "Gate from which passengers board the departing flight. Example: C12."
+          },
+          "pier": {
+            "type": "string"
+          },
+          "id": {
+            "type": "string",
+            "description": "Unique identifier of the flight."
+          },
+          "isOperationalFlight": {
+            "type": "boolean",
+            "description": "Indicates whether the flight is operational (true) or non-operational (false)."
+          },
+          "mainFlight": {
+            "type": "string",
+            "description": "For a codeshare, the flight name of the airline that operates the flight."
+          },
+          "prefixIATA": {
+            "type": "string",
+            "description": "Two-character IATA prefix of the operating airline. Example: KL."
+          },
+          "prefixICAO": {
+            "type": "string",
+            "description": "Three-character ICAO prefix of the operating airline. Example: KLM."
+          },
+          "airlineCode": {
+            "type": "integer",
+            "description": "Numeric NVLS code of the airline.",
+            "format": "int64"
+          },
+          "publicEstimatedOffBlockTime": {
+            "type": "string",
+            "description": "Publicly displayed expected departure time of a departing flight. Format: yyyy-MM-dd'T'HH:mm:ss.SSSZ",
+            "format": "date-time"
+          },
+          "publicFlightState": {
+            "$ref": "#/components/schemas/PublicFlightStateType"
+          },
+          "route": {
+            "$ref": "#/components/schemas/RouteType"
+          },
+          "scheduleDateTime": {
+            "type": "string",
+            "description": "Scheduled departure or arrival date and time. Format: yyyy-MM-dd'T'HH:mm:ss.SSSZ",
+            "format": "date-time"
+          },
+          "scheduleDate": {
+            "type": "string",
+            "description": "Date on which the flight is scheduled to operate. Format: yyyy-MM-dd. Example: 2015-06-17.",
+            "format": "date"
+          },
+          "scheduleTime": {
+            "type": "string",
+            "description": "Time the flight is scheduled to depart or arrive. Format: hh:mm:ss. Example: 15:25:00."
+          },
+          "serviceType": {
+            "type": "string",
+            "description": "The service type category of the commercial flight. For example: J = Passenger Line, C = Passenger Charter, F = Freight Line and H = Freight Charter."
+          },
+          "terminal": {
+            "type": "integer",
+            "description": "Schiphol terminal number used for departure or arrival.",
+            "format": "int64"
+          },
+          "transferPositions": {
+            "$ref": "#/components/schemas/TransferPositionsType"
+          },
+          "schemaVersion": {
+            "type": "string",
+            "description": "Schema version of the API."
+          }
+        }
+      },
+      "RouteType": {
+        "type": "object",
+        "description": "Route information for the flight.",
+        "properties": {
+          "destinations": {
+            "type": "array",
+            "description": "IATA codes of the airports in the flight route.",
+            "items": {
+              "type": "string"
+            }
+          },
+          "eu": {
+            "type": "string",
+            "description": "Route category: S (Schengen), E (Europe) or N (non-Europe)."
+          },
+          "visa": {
+            "type": "boolean",
+            "description": "Indicates whether a visa is required for the destination."
+          }
+        }
+      },
+      "DesksType": {
+        "type": "object",
+        "description": "Check-in desks in the row.",
+        "properties": {
+          "desks": {
+            "type": "array",
+            "description": "Check-in desks in the row.",
+            "items": {
+              "$ref": "#/components/schemas/DeskType"
+            }
+          }
+        }
+      },
+      "AircraftTypeType": {
+        "type": "object",
+        "description": "Aircraft type that operates the main flight.",
+        "properties": {
+          "iataMain": {
+            "type": "string",
+            "description": "IATA main aircraft type code. Example: 739."
+          },
+          "iataSub": {
+            "type": "string",
+            "description": "IATA aircraft subtype code. Example: 73J."
+          }
+        }
+      },
+      "DeskType": {
+        "type": "object",
+        "description": "Check-in desk allocated to the flight.",
+        "properties": {
+          "checkinClass": {
+            "$ref": "#/components/schemas/CheckinClassType"
+          },
+          "position": {
+            "type": "integer",
+            "description": "Check-in desk number.",
+            "format": "int64"
+          }
+        }
+      },
+      "CheckinClassType": {
+        "type": "object",
+        "description": "Check-in class allocated to the desk.",
+        "properties": {
+          "code": {
+            "type": "string",
+            "description": "Check-in class code. Example: E."
+          },
+          "description": {
+            "type": "string",
+            "description": "Description of the check-in class. Example: Economy."
+          }
+        }
+      },
+      "TransferPositionsType": {
+        "type": "object",
+        "description": "Transfer desks allocated to the flight.",
+        "properties": {
+          "transferPositions": {
+            "type": "array",
+            "description": "Transfer desks allocated to the flight.",
+            "items": {
+              "type": "integer",
+              "format": "int64"
+            }
+          }
+        }
+      },
+      "PublicFlightStateType": {
+        "type": "object",
+        "description": "Public status of the flight.",
+        "properties": {
+          "flightStates": {
+            "type": "array",
+            "description": "Public flight status codes, such as BRD for boarding.",
+            "items": {
+              "type": "string"
+            }
+          }
+        }
+      },
+      "CheckinAllocationsType": {
+        "type": "object",
+        "description": "Check-in desk allocations for the flight or its codeshare flights.",
+        "properties": {
+          "checkinAllocations": {
+            "type": "array",
+            "description": "Check-in desk allocations for the flight or its codeshare flights.",
+            "items": {
+              "$ref": "#/components/schemas/CheckinAllocationType"
+            }
+          },
+          "remarks": {
+            "$ref": "#/components/schemas/RemarksType"
+          }
+        }
+      }
+    }
+  }
+}

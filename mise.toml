@@ -1,0 +1,67 @@
+monorepo_root = true
+
+[monorepo]
+config_roots = [
+  "backend",
+  "frontend",
+]
+
+[tools]
+kotlin = { version = "latest", asset_pattern = "kotlin-compiler-*.zip", bin_path = "kotlinc/bin" }
+java = "25"
+
+[env]
+PROJECT_DIR = "{{ config_root }}"
+SEED_DIR = "{{ config_root }}/data/seed"
+BACKEND_PORT = "{{ get_env(name='BACKEND_PORT', default='8090') }}"
+FRONTEND_PORT = "{{ get_env(name='FRONTEND_PORT', default='4200') }}"
+OLLAMA_BASE_URL = "{{ get_env(name='OLLAMA_BASE_URL', default='http://localhost:12434/engines/v1') }}"
+OLLAMA_MODEL = "{{ get_env(name='OLLAMA_MODEL', default='gemma4:e2b-mlx') }}"
+DEMO_MODE = "{{ get_env(name='DEMO_MODE', default='true') }}"
+
+[tasks.ensure-model]
+description = "Ensure the local LLM model is available in Docker Model Runner"
+run = """
+if curl -sf "${OLLAMA_BASE_URL}/models" | grep -q "${OLLAMA_MODEL}"; then
+  echo "[mise] Model '${OLLAMA_MODEL}' already available at ${OLLAMA_BASE_URL}"
+elif curl -sf http://127.0.0.1:12434/models >/dev/null 2>&1; then
+  echo "[mise] Pulling '${OLLAMA_MODEL}' into Docker Model Runner..."
+  curl -sf -X POST http://127.0.0.1:12434/models/create \
+    -H 'Content-Type: application/json' \
+    -d "{\\"from\\":\\"${OLLAMA_MODEL}\\"}" || true
+else
+  echo "[mise] Docker Model Runner not detected on 127.0.0.1:12434; continuing with configured OLLAMA_BASE_URL=${OLLAMA_BASE_URL}"
+fi
+"""
+
+[tasks.frontend-install]
+description = "Install frontend pnpm dependencies if node_modules is missing"
+run = """
+if [ ! -d frontend/node_modules ]; then
+  pnpm --dir frontend install
+fi
+"""
+
+[tasks.build]
+description = "Build all monorepo projects (//backend:build + //frontend:build)"
+depends = ["//backend:build", "//frontend:build"]
+
+[tasks.test]
+description = "Run all monorepo test suites (//backend:test + //frontend:test)"
+depends = ["//backend:test", "//frontend:test"]
+
+[tasks.backend]
+description = "Start Spring Boot 4.2 + Spring AI 2.1 backend (port configured via BACKEND_PORT)"
+depends = ["//backend:dev"]
+
+[tasks.frontend]
+description = "Start Angular 22 dev server (port configured via FRONTEND_PORT)"
+depends = ["//frontend:dev"]
+
+[tasks.dev]
+description = "Start standalone demo (Docker Model Runner check + DuckDB/OpenSky seed + backend + frontend)"
+depends = ["ensure-model", "frontend-install", "//backend:dev", "//frontend:dev"]
+
+[tasks.gcx-login]
+description = "Configure local gcx context against the grafana/otel-lgtm container (http://localhost:3000)"
+run = "GRAFANA_PASSWORD=admin gcx login local --server http://localhost:3000 --basic-auth --user admin --yes"

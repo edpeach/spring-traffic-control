@@ -1,0 +1,32 @@
+[tools]
+node = "latest"
+pnpm = "latest"
+"npm:@angular/cli" = "latest"
+
+[env]
+FRONTEND_PORT = "{{ get_env(name='FRONTEND_PORT', default='4200') }}"
+BACKEND_PORT = "{{ get_env(name='BACKEND_PORT', default='8090') }}"
+
+[tasks.install]
+description = "Install Angular 22 dependencies with pnpm"
+run = "pnpm install --registry=https://registry.npmjs.org/"
+sources = ["package.json", "pnpm-lock.yaml", "pnpm-workspace.yaml"]
+outputs = ["node_modules/.modules.yaml"]
+
+[tasks.dev]
+description = "Run Angular 22 dev server on FRONTEND_PORT (proxied to BACKEND_PORT)"
+depends = [":install"]
+run = "ng serve --port $FRONTEND_PORT --proxy-config proxy.conf.js"
+
+[tasks.build]
+description = "Build production Angular 22 bundle"
+depends = [":install"]
+run = "pnpm run build"
+sources = ["angular.json", "tsconfig*.json", "src/**/*"]
+outputs = ["dist/**/*"]
+
+[tasks.test]
+description = "Run Angular 22 unit tests with Vitest 5"
+depends = [":install"]
+run = "pnpm run test"
+sources = ["angular.json", "tsconfig*.json", "src/**/*"]

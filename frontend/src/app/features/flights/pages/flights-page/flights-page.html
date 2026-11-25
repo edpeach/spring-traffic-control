@@ -1,0 +1,267 @@
+<section class="flex flex-col gap-4">
+  <header class="flex flex-wrap items-center justify-between gap-3">
+    <div>
+      <h1 class="text-xl font-semibold tracking-tight text-ink">Flight Schedule</h1>
+      <p class="text-xs text-ink-muted">
+        Showing {{ store.filteredFlights().length }} of {{ store.totalCount() }} scheduled flights
+        @if (store.viewMode() === 'turnarounds') {
+          <span>• {{ store.turnaroundPairs().length }} aircraft turnaround(s)</span>
+        }
+      </p>
+    </div>
+
+    <div class="flex flex-wrap items-center gap-3">
+      <mat-form-field appearance="outline" subscriptSizing="dynamic" class="w-64">
+        <mat-label>Search flights</mat-label>
+        <mat-icon matPrefix>search</mat-icon>
+        <input
+          matInput
+          type="search"
+          [value]="store.query()"
+          (input)="onSearch($event)"
+          placeholder="Flight, codeshare, route, reg..."
+        />
+      </mat-form-field>
+
+      <mat-button-toggle-group
+        [value]="store.directionFilter()"
+        (change)="setDirectionFilter($event.value)"
+        aria-label="Flight direction filter"
+      >
+        <mat-button-toggle value="ALL">All</mat-button-toggle>
+        <mat-button-toggle value="A" matTooltip="Arrivals">Arr</mat-button-toggle>
+        <mat-button-toggle value="D" matTooltip="Departures">Dep</mat-button-toggle>
+      </mat-button-toggle-group>
+
+      <mat-button-toggle-group
+        [value]="store.viewMode()"
+        (change)="setViewMode($event.value)"
+        aria-label="Flights view mode"
+      >
+        <mat-button-toggle value="table" matTooltip="Virtual table">
+          <mat-icon>table_rows</mat-icon>
+          <span class="ml-1">Table</span>
+        </mat-button-toggle>
+        <mat-button-toggle value="cards" matTooltip="Sorted flight cards">
+          <mat-icon>grid_view</mat-icon>
+          <span class="ml-1">Cards</span>
+        </mat-button-toggle>
+        <mat-button-toggle value="turnarounds" matTooltip="Aircraft turnarounds">
+          <mat-icon>connecting_airports</mat-icon>
+          <span class="ml-1">Turnarounds</span>
+        </mat-button-toggle>
+      </mat-button-toggle-group>
+
+      <button mat-flat-button type="button" [disabled]="store.syncing()" (click)="openSyncDialog()">
+        <mat-icon [class.animate-spin]="store.syncing()">sync</mat-icon>
+        {{ store.syncing() ? 'Syncing…' : 'Sync Schedule' }}
+      </button>
+    </div>
+  </header>
+
+  @if (store.syncMessage(); as syncMessage) {
+    <mat-card appearance="outlined" role="status" class="px-4 py-2">
+      <div class="flex items-center justify-between gap-2 text-xs text-ink">
+        <div class="flex items-center gap-2">
+          <mat-icon class="text-accent-bright">check_circle</mat-icon>
+          <span>{{ syncMessage }}</span>
+        </div>
+        <button
+          mat-icon-button
+          type="button"
+          aria-label="Dismiss sync message"
+          (click)="dismissSyncMessage()"
+        >
+          <mat-icon>close</mat-icon>
+        </button>
+      </div>
+    </mat-card>
+  }
+
+  @if (store.error(); as errorMessage) {
+    <mat-card appearance="outlined" role="alert" class="px-4 py-3">
+      <div class="flex items-center gap-2 text-sm text-ink">
+        <mat-icon class="text-accent-bright">error</mat-icon>
+        <span>{{ errorMessage }}</span>
+      </div>
+    </mat-card>
+  }
+
+  @if (store.loading()) {
+    <mat-card appearance="outlined" class="flex h-64 items-center justify-center">
+      <div class="flex flex-col items-center gap-3">
+        <mat-spinner diameter="32" />
+        <span class="text-sm text-ink-muted">Loading schedule…</span>
+      </div>
+    </mat-card>
+  } @else if (store.filteredFlights().length === 0) {
+    <mat-card
+      appearance="outlined"
+      class="flex h-64 flex-col items-center justify-center gap-1 text-center"
+    >
+      <mat-icon class="text-ink-muted">flight</mat-icon>
+      <p class="text-sm font-medium text-ink">No scheduled flights found</p>
+      <p class="text-xs text-ink-muted">
+        Try adjusting your search or sync today's Schiphol schedule.
+      </p>
+    </mat-card>
+  } @else if (store.viewMode() === 'table') {
+    <mat-card appearance="outlined" class="overflow-hidden">
+      <div
+        class="flight-table-grid border-b border-edge bg-surface-elevated px-4 py-2.5 text-xs font-semibold uppercase tracking-wider text-ink-muted"
+        role="row"
+      >
+        <span role="columnheader">Flight</span>
+        <span role="columnheader">Dir</span>
+        <span role="columnheader">Route</span>
+        <span role="columnheader">Scheduled / Est</span>
+        <span role="columnheader">Gate / Term</span>
+        <span role="columnheader">Aircraft</span>
+        <span role="columnheader" class="text-right">Status</span>
+      </div>
+
+      <cdk-virtual-scroll-viewport
+        [itemSize]="56"
+        class="h-[calc(100dvh-18rem)] min-h-80 w-full"
+        role="table"
+        aria-label="Scheduled flights table"
+      >
+        <div
+          *cdkVirtualFor="let flight of store.filteredFlights(); trackBy: trackById"
+          role="row"
+          tabindex="0"
+          class="flight-table-grid h-14 cursor-pointer items-center border-b border-edge/60 px-4 text-sm transition-colors hover:bg-surface-elevated/70 focus-visible:bg-surface-elevated focus-visible:outline-none"
+          (click)="openDetail(flight)"
+          (keydown.enter)="openDetail(flight)"
+        >
+          <div class="flex items-center gap-1.5" role="cell">
+            <span
+              class="rounded bg-accent/15 px-1.5 py-0.5 font-mono text-xs font-semibold text-accent-bright"
+            >
+              {{ flight.flightName }}
+            </span>
+            @if (flight.mainFlight && flight.mainFlight !== flight.flightName) {
+              <span
+                class="rounded border border-edge bg-surface-elevated px-1.5 py-0.5 font-mono text-xs text-ink-muted"
+                [matTooltip]="'Operated as ' + flight.mainFlight"
+              >
+                {{ flight.mainFlight }}
+              </span>
+            }
+          </div>
+
+          <span
+            class="inline-flex items-center gap-1 text-xs font-medium text-ink-muted"
+            role="cell"
+          >
+            <mat-icon class="flight-table-icon text-accent" aria-hidden="true">
+              {{ flight.flightDirection === 'A' ? 'flight_land' : 'flight_takeoff' }}
+            </mat-icon>
+            <span>{{ flight.flightDirection === 'A' ? 'Arr' : 'Dep' }}</span>
+          </span>
+
+          <span class="font-mono text-xs text-ink" role="cell">
+            {{ formatRoute(flight) }}
+          </span>
+
+          <div class="font-mono text-xs" role="cell">
+            <span class="font-semibold text-ink">
+              {{ formatTime(flight.scheduleDateTime, flight.scheduleTime) }}
+            </span>
+            <span class="ml-1.5 text-ink-muted"> ({{ formatTime(primaryEventIso(flight)) }}) </span>
+          </div>
+
+          <span class="text-xs text-ink-muted" role="cell">
+            <span class="font-mono text-ink">{{ flight.gate ?? '—' }}</span>
+            @if (flight.terminal) {
+              <span class="ml-1">T{{ flight.terminal }}</span>
+            }
+          </span>
+
+          <div class="truncate font-mono text-xs" role="cell">
+            <span class="text-ink">{{ flight.aircraftRegistration ?? '—' }}</span>
+            <span class="ml-1.5 text-ink-muted">{{ formatAircraftType(flight) }}</span>
+          </div>
+
+          <div class="flex items-center justify-end gap-1" role="cell">
+            @for (state of flight.flightStates; track state) {
+              <span
+                class="rounded border border-edge bg-surface-elevated px-1.5 py-0.5 font-mono text-xs text-ink"
+              >
+                {{ state }}
+              </span>
+            }
+          </div>
+        </div>
+      </cdk-virtual-scroll-viewport>
+    </mat-card>
+  } @else if (store.viewMode() === 'cards') {
+    <div #gridHost class="w-full">
+      <cdk-virtual-scroll-viewport
+        [itemSize]="252"
+        class="h-[calc(100dvh-16rem)] min-h-96 w-full"
+        aria-label="Scheduled flights card grid"
+      >
+        <div
+          *cdkVirtualFor="let row of cardRows(); trackBy: trackRow"
+          class="grid gap-4 pb-4"
+          [style.grid-template-columns]="'repeat(' + columns() + ', minmax(0, 1fr))'"
+        >
+          @for (flight of row; track flight.id) {
+            <app-flight-card [flight]="flight" (viewDetails)="openDetail($event)" />
+          }
+        </div>
+      </cdk-virtual-scroll-viewport>
+    </div>
+  } @else {
+    <div class="flex flex-wrap items-center justify-between gap-3">
+      <div class="flex items-center gap-2">
+        <span class="text-xs font-medium text-ink-muted">Sort by:</span>
+        <mat-button-toggle-group
+          [value]="store.turnaroundSortBy()"
+          (change)="setTurnaroundSortBy($event.value)"
+          aria-label="Turnaround sort order"
+        >
+          <mat-button-toggle value="arrival">
+            <mat-icon>flight_land</mat-icon>
+            <span class="ml-1">Arrival time</span>
+          </mat-button-toggle>
+          <mat-button-toggle value="departure">
+            <mat-icon>flight_takeoff</mat-icon>
+            <span class="ml-1">Departure time</span>
+          </mat-button-toggle>
+        </mat-button-toggle-group>
+      </div>
+
+      <mat-slide-toggle
+        [checked]="store.showDepartedTurnarounds()"
+        (change)="setShowDepartedTurnarounds($event.checked)"
+      >
+        <span class="text-xs font-medium text-ink">Show departed</span>
+      </mat-slide-toggle>
+    </div>
+
+    @if (store.turnaroundPairs().length === 0) {
+      <mat-card
+        appearance="outlined"
+        class="flex h-64 flex-col items-center justify-center gap-1 text-center"
+      >
+        <mat-icon class="text-ink-muted">connecting_airports</mat-icon>
+        <p class="text-sm font-medium text-ink">No active aircraft turnarounds</p>
+        <p class="text-xs text-ink-muted">
+          Enable "Show departed" or adjust filters to view completed turnarounds.
+        </p>
+      </mat-card>
+    } @else {
+      <cdk-virtual-scroll-viewport
+        [itemSize]="248"
+        class="h-[calc(100dvh-19rem)] min-h-96 w-full"
+        aria-label="Aircraft turnarounds list"
+      >
+        <div *cdkVirtualFor="let pair of store.turnaroundPairs(); trackBy: trackPair" class="pb-4">
+          <app-turnaround-card [pair]="pair" (selectFlight)="openDetail($event)" />
+        </div>
+      </cdk-virtual-scroll-viewport>
+    }
+  }
+</section>

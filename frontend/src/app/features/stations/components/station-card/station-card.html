@@ -1,0 +1,164 @@
+@let s = station();
+
+<mat-card appearance="outlined" class="station-card flex h-full flex-col">
+  <mat-card-header class="flex items-start justify-between gap-3">
+    <mat-card-title class="text-left" [title]="s.name">{{ s.name }}</mat-card-title>
+
+    <mat-card-subtitle class="pt-1.5 text-left">
+      @if (s.icao || s.iata || s.country) {
+        <mat-chip-set class="station-subtitle-chips" aria-label="Station identifiers">
+          @if (codeDisplay() === 'iata') {
+            @if (s.iata) {
+              <mat-chip class="station-icao-chip">{{ s.iata }}</mat-chip>
+            }
+            @if (s.icao) {
+              <mat-chip>{{ s.icao }}</mat-chip>
+            }
+          } @else {
+            @if (s.icao) {
+              <mat-chip class="station-icao-chip">{{ s.icao }}</mat-chip>
+            }
+            @if (s.iata) {
+              <mat-chip>{{ s.iata }}</mat-chip>
+            }
+          }
+          @if (s.country) {
+            <mat-chip>{{ s.country }}</mat-chip>
+          }
+        </mat-chip-set>
+      }
+    </mat-card-subtitle>
+
+    <div class="ml-auto flex shrink-0 items-center gap-1 self-start">
+      <span class="text-right text-xs font-medium text-ink-muted">{{ airportTypeLabel() }}</span>
+      <button
+        mat-icon-button
+        type="button"
+        [attr.aria-expanded]="expanded()"
+        [attr.aria-label]="expanded() ? 'Hide additional details' : 'Show additional details'"
+        [matTooltip]="expanded() ? 'Hide details' : 'More details'"
+        (click)="toggleExpanded()"
+      >
+        <mat-icon>{{ expanded() ? 'expand_less' : 'expand_more' }}</mat-icon>
+      </button>
+    </div>
+  </mat-card-header>
+
+  <mat-card-content class="flex flex-1 flex-col gap-3 px-4 py-3 text-xs">
+    <div class="flex flex-wrap items-center justify-between gap-x-4 gap-y-2 py-1">
+      <span class="inline-flex items-center gap-1.5 font-mono text-ink">
+        <mat-icon class="station-meta-icon text-accent" aria-hidden="true">location_on</mat-icon>
+        <span>{{ coordinatesLabel() }}</span>
+      </span>
+
+      <span class="inline-flex items-center gap-1.5 text-ink-muted">
+        <mat-icon class="station-meta-icon text-accent" aria-hidden="true">altitude</mat-icon>
+        <span>{{ elevationLabel() }}</span>
+      </span>
+
+      <span class="inline-flex items-center gap-1.5 font-mono text-ink">
+        <mat-icon class="station-meta-icon text-accent" aria-hidden="true">cell_tower</mat-icon>
+        <span>{{ s.primaryFrequency ? s.primaryFrequency + ' MHz' : '—' }}</span>
+      </span>
+    </div>
+
+    @if (expanded()) {
+      <mat-divider />
+      <dl class="grid grid-cols-2 gap-x-4 gap-y-2.5 py-1 text-xs">
+        <div>
+          <dt class="text-ink-muted">Aircraft Cat.</dt>
+          <dd class="font-medium text-ink">{{ s.maxAircraftCategory }}</dd>
+        </div>
+        <div>
+          <dt class="text-ink-muted">Runways</dt>
+          <dd class="font-medium text-ink">
+            {{ s.runwayCount }}
+            @if (s.maxRunwayMeters) {
+              <span class="text-ink-muted">({{ s.maxRunwayMeters }} m)</span>
+            }
+          </dd>
+        </div>
+        <div>
+          <dt class="text-ink-muted">Traffic</dt>
+          <dd class="font-medium text-ink">
+            {{ s.trafficTypes.length ? s.trafficTypes.join(', ') : '—' }}
+          </dd>
+        </div>
+        <div>
+          <dt class="text-ink-muted">Hours</dt>
+          <dd class="font-medium text-ink">
+            @if (s.openingHours.alwaysOpen) {
+              24/7
+            } @else {
+              {{ s.openingHours.openUtc ?? '?' }} – {{ s.openingHours.closeUtc ?? '?' }} UTC
+            }
+          </dd>
+        </div>
+        @if (s.city) {
+          <div>
+            <dt class="text-ink-muted">City</dt>
+            <dd class="truncate font-medium text-ink">{{ s.city }}</dd>
+          </div>
+        }
+        @if (s.emergencyMedicalCapable) {
+          <div class="col-span-2 flex items-center gap-1.5 text-accent-bright">
+            <mat-icon class="station-meta-icon" aria-hidden="true">medical_services</mat-icon>
+            <span>Emergency medical diversion capable</span>
+          </div>
+        }
+      </dl>
+    }
+
+    @if (hasFlags()) {
+      <div
+        class="mt-auto inline-flex flex-wrap items-center gap-3 pt-1 text-ink-muted"
+        aria-label="Operational notices"
+      >
+        @if (s.ppr) {
+          <span
+            class="inline-flex items-center gap-1 text-accent-bright"
+            matTooltip="Prior Permission Required (PPR)"
+            aria-label="Prior Permission Required"
+          >
+            <mat-icon class="station-meta-icon" aria-hidden="true">lock</mat-icon>
+            <span>PPR</span>
+          </span>
+        }
+        @if (s.skydiveActivity) {
+          <span
+            class="inline-flex items-center gap-1 text-accent-bright"
+            matTooltip="Skydive Activity"
+            aria-label="Skydive Activity"
+          >
+            <mat-icon class="station-meta-icon" aria-hidden="true">paragliding</mat-icon>
+            <span>Skydive</span>
+          </span>
+        }
+        @if (s.winchOnly) {
+          <span
+            class="inline-flex items-center gap-1 text-accent-bright"
+            matTooltip="Winch Launch Only"
+            aria-label="Winch Launch Only"
+          >
+            <mat-icon class="station-meta-icon" aria-hidden="true">cable</mat-icon>
+            <span>Winch only</span>
+          </span>
+        }
+      </div>
+    }
+  </mat-card-content>
+
+  <mat-divider />
+
+  <mat-card-actions align="end" class="gap-1">
+    <button mat-button type="button" (click)="showOnMap.emit(s)">
+      <mat-icon>map</mat-icon>
+      Show on map
+    </button>
+
+    <button mat-button type="button" (click)="viewDetails.emit(s)">
+      Details
+      <mat-icon iconPositionEnd>arrow_forward</mat-icon>
+    </button>
+  </mat-card-actions>
+</mat-card>
