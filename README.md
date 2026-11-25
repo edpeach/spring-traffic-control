@@ -2,6 +2,8 @@
 
 An experimental **AG-UI** and **A2UI** (Agentic / Generative UI) playground built with **Spring Boot 4.2**, **Spring Modulith**, **Spring AI 2.1** (Kotlin 2.4 / Java 25), and **Angular 22** (Signals, NgRx SignalStore, MapLibre GL, Tailwind CSS v4).
 
+![Spring Traffic Control in action: streaming tool execution, native Angular A2UI cards, and live MapLibre GL control](./assets/stc-in-action.webp)
+
 ## Why This Exists
 
 Most AG-UI and A2UI examples stop at a simple todo list or weather widget. **Spring Traffic Control** is a sandbox for pushing those protocols in a much crazier, richer direction — combining live-style aviation telemetry, interactive 3D/2D maps, multi-step tool calling, voice commands, dynamic A2UI cards, and full UI control driven by local or cloud LLMs.
